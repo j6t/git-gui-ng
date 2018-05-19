@@ -1,14 +1,5 @@
-#!/bin/sh
-# Tcl ignores the next line -*- tcl -*- \
- if test "z$*" = zversion \
- || test "z$*" = z--version; \
- then \
-	echo 'git-gui version @@GITGUI_VERSION@@'; \
-	exit; \
- fi; \
- argv0=$0; \
- exec wish "$argv0" -- "$@"
 
+const char code[] = R"tcl(
 set appvers {@@GITGUI_VERSION@@}
 set copyright [string map [list (c) \u00a9] {
 Copyright (c) 2006-2010 Shawn Pearce, et. al.
@@ -4054,9 +4045,4 @@ if {[is_enabled retcode]} {
 if {$picked && [is_config_true gui.autoexplore]} {
 	do_explore
 }
-
-# Local variables:
-# mode: tcl
-# indent-tabs-mode: t
-# tab-width: 4
-# End:
+)tcl";
