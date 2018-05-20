@@ -64,11 +64,7 @@ void GitGui::check_for_trace(std::vector<std::string>& argv)
 
 std::string GitGui::find_subcommand(fs::path argv0, std::vector<std::string>& argv)
 {
-	argv0 = argv0.filename();
-
-	eval("set argv0 \"" + details::quote(argv0.string()) + '"');
-
-	std::string subcommand = argv0.string();
+	std::string subcommand = argv0.filename().string();
 	if (subcommand.substr(0, 4) == "git-")
 		subcommand.erase(0, 4);
 
@@ -80,7 +76,6 @@ std::string GitGui::find_subcommand(fs::path argv0, std::vector<std::string>& ar
 			subcommand = "gui";
 		}
 	}
-	eval("set subcommand " + subcommand);
 	return subcommand;
 }
 
@@ -131,13 +126,161 @@ void GitGui::determine_features(const std::string& subcommand, std::vector<std::
 		}
 		argv.erase(argv.begin(), i);
 	}
+}
 
-	std::string cmd;
+int GitGui::usage(const char* argv0, const std::string& args)
+{
+	std::string s = "mc usage:"_tcl;
+	s += " ";
+	s += argv0;
+	s += " " + args;
+	if (std::string("tk windowingsystem"_tcl) == "win32") {
+		wm(withdraw, ".");
+		tk_messageBox() -icon(info) -messagetext(s)
+			-title(std::string("mc Usage"_tcl));
+	} else {
+		std::cerr << s << std::endl;
+	}
+	return 2;
+}
+
+// -- Not a normal commit type invocation?  Do that instead!
+int GitGui::do_blame_browser(const char* argv0,
+			const std::vector<std::string>& argv, bool is_blame)
+{
+	std::string args;
+	if (is_blame)
+		args = "blame [--line=<num>] rev? path";
+	else
+		args = "browser rev? path";
+	auto report_usage = [&]{ return usage(argv0, args); };
+
+	if (argv.empty())
+		return report_usage();
+
+	fs::path prefix = std::string("return $_prefix"_tcl);
+	fs::path path;
+	std::string head, jump_spec;
+	bool is_path = false;
 	for (const auto& a: argv)
 	{
-		cmd += " \"" + a + '"';
+		auto p = prefix / a;
+
+		if (is_path || fs::exists(p)) {
+			if (!path.empty())
+				return report_usage();
+			path = p.lexically_normal();
+			// this did not remove trailing "/" or "/."
+			if (path.filename() == "." && path.has_parent_path())
+				path.remove_filename();
+			break;
+		} else if (a == "--") {
+			if (!path.empty()) {
+				if (!head.empty())
+					return report_usage();
+				head = path.string();
+				path.clear();
+			}
+			is_path = true;
+		} else if (a.substr(0, 7) == "--line=") {
+			if (!jump_spec.empty() || !head.empty())
+				return report_usage();
+			jump_spec = a.substr(7);
+		} else if (head.empty()) {
+			head = a;
+			is_path = true;
+		} else {
+			return report_usage();
+		}
 	}
-	eval("set argv [list" + cmd + ']');
+
+	if (!head.empty() && path.empty()) {
+		if (head[0] == '/') {
+			path = fs::path(head).lexically_normal();
+			head.clear();
+		} else {
+			path = (prefix / head).lexically_normal();
+			head.clear();
+		}
+	}
+
+	if (head.empty()) {
+		"load_current_branch"_tcl;
+	} else {
+		if (head.size() < 40 && head.find_first_not_of("0123456789abcdef") == std::string::npos) {
+			try {
+				head = std::string(eval("git rev-parse --verify \"" + head + '"'));
+			} catch (TkError& e) {
+				std::string err = e.what();
+				if (std::string("tk windowingsystem"_tcl) == "win32") {
+					tk_messageBox() -icon(error) -title(std::string("mc Error"_tcl)) -messagetext(err);
+				} else {
+					std::cerr << err << std::endl;
+				}
+				return 2;
+			}
+		}
+		eval("set current_branch \"" + head + '"');
+	}
+
+	wm(deiconify, ".");
+	if (!is_blame) {
+		if (!jump_spec.empty())
+			return report_usage();
+		if (head.empty()) {
+			if (!path.empty() && fs::is_directory(path)) {
+				head = std::string("return $current_branch"_tcl);
+			} else {
+				head = path.string();
+				path.clear();
+			}
+		}
+		eval("browser::new \"" + head + "\" \"" + path.string() + '"');
+	}
+	else
+	{
+		if (head.empty() && !fs::exists(path)) {
+			"catch {wm withdraw .}"_tcl;
+			tk_messageBox()
+				-icon(error)
+				-messagetype(ok)
+				-title(std::string(R"tcl(mc "git-gui: fatal error")tcl"_tcl))
+				-messagetext(std::string(eval(R"tcl(mc "fatal: cannot stat path %s: No such file or directory" ")tcl" + path.string() + '"')));
+			return 2;
+		}
+		eval("blame::new \"" + head + "\" \"" + path.string() + "\" \"" + jump_spec + '"');
+	}
+	runEventLoop();
+	return 1;
+}
+
+int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
+			std::vector<std::string>& argv)
+{
+	if (subcommand == "browser")
+		return do_blame_browser(argv0, argv, false);
+	if (subcommand == "blame")
+		return do_blame_browser(argv0, argv, true);
+	if (subcommand == "citool" || subcommand == "gui")
+	{
+		if (!argv.empty()) {
+			return usage(argv0, subcommand);
+		}
+		// fall through to setup UI for commits
+	}
+	else
+	{
+		auto s = std::string("mc usage:"_tcl) + " " + argv0 + " [{blame|browser|citool}]";
+		if (std::string("tk windowingsystem"_tcl) == "win32") {
+			wm(withdraw, ".");
+			tk_messageBox() -icon(error) -messagetext(s)
+				-title(std::string("mc Usage"_tcl));
+		} else {
+			std::cerr << s << std::endl;
+		}
+		return 2;
+	}
+	return 0;
 }
 
 int GitGui::main(const char* argv0, std::vector<std::string> argv)
@@ -3061,153 +3204,12 @@ bind all <$M1B-Key-q> do_quit
 bind all <$M1B-Key-Q> do_quit
 bind all <$M1B-Key-w> {destroy [winfo toplevel %W]}
 bind all <$M1B-Key-W> {destroy [winfo toplevel %W]}
+	)tcl"_tcl;
 
-set subcommand_args {}
-proc usage {} {
-	set s "[mc usage:] $::argv0 $::subcommand $::subcommand_args"
-	if {[tk windowingsystem] eq "win32"} {
-		wm withdraw .
-		tk_messageBox -icon info -message $s \
-			-title [mc "Usage"]
-	} else {
-		puts stderr $s
-	}
-	exit 1
-}
+	if (int done = do_subcommand(subcommand, argv0, argv))
+		return done-1;
 
-proc normalize_relpath {path} {
-	set elements {}
-	foreach item [file split $path] {
-		if {$item eq {.}} continue
-		if {$item eq {..} && [llength $elements] > 0
-		    && [lindex $elements end] ne {..}} {
-			set elements [lrange $elements 0 end-1]
-			continue
-		}
-		lappend elements $item
-	}
-	return [eval file join $elements]
-}
-
-# -- Not a normal commit type invocation?  Do that instead!
-#
-switch -- $subcommand {
-browser -
-blame {
-	if {$subcommand eq "blame"} {
-		set subcommand_args {[--line=<num>] rev? path}
-	} else {
-		set subcommand_args {rev? path}
-	}
-	if {$argv eq {}} usage
-	set head {}
-	set path {}
-	set jump_spec {}
-	set is_path 0
-	foreach a $argv {
-		set p [file join $_prefix $a]
-
-		if {$is_path || [file exists $p]} {
-			if {$path ne {}} usage
-			set path [normalize_relpath $p]
-			break
-		} elseif {$a eq {--}} {
-			if {$path ne {}} {
-				if {$head ne {}} usage
-				set head $path
-				set path {}
-			}
-			set is_path 1
-		} elseif {[regexp {^--line=(\d+)$} $a a lnum]} {
-			if {$jump_spec ne {} || $head ne {}} usage
-			set jump_spec [list $lnum]
-		} elseif {$head eq {}} {
-			if {$head ne {}} usage
-			set head $a
-			set is_path 1
-		} else {
-			usage
-		}
-	}
-	unset is_path
-
-	if {$head ne {} && $path eq {}} {
-		if {[string index $head 0] eq {/}} {
-			set path [normalize_relpath $head]
-			set head {}
-		} else {
-			set path [normalize_relpath $_prefix$head]
-			set head {}
-		}
-	}
-
-	if {$head eq {}} {
-		load_current_branch
-	} else {
-		if {[regexp {^[0-9a-f]{1,39}$} $head]} {
-			if {[catch {
-					set head [git rev-parse --verify $head]
-				} err]} {
-				if {[tk windowingsystem] eq "win32"} {
-					tk_messageBox -icon error -title [mc Error] -message $err
-				} else {
-					puts stderr $err
-				}
-				exit 1
-			}
-		}
-		set current_branch $head
-	}
-
-	wm deiconify .
-	switch -- $subcommand {
-	browser {
-		if {$jump_spec ne {}} usage
-		if {$head eq {}} {
-			if {$path ne {} && [file isdirectory $path]} {
-				set head $current_branch
-			} else {
-				set head $path
-				set path {}
-			}
-		}
-		browser::new $head $path
-	}
-	blame   {
-		if {$head eq {} && ![file exists $path]} {
-			catch {wm withdraw .}
-			tk_messageBox \
-				-icon error \
-				-type ok \
-				-title [mc "git-gui: fatal error"] \
-				-message [mc "fatal: cannot stat path %s: No such file or directory" $path]
-			exit 1
-		}
-		blame::new $head $path $jump_spec
-	}
-	}
-	return
-}
-citool -
-gui {
-	if {[llength $argv] != 0} {
-		usage
-	}
-	# fall through to setup UI for commits
-}
-default {
-	set err "[mc usage:] $argv0 \[{blame|browser|citool}\]"
-	if {[tk windowingsystem] eq "win32"} {
-		wm withdraw .
-		tk_messageBox -icon error -message $err \
-			-title [mc "Usage"]
-	} else {
-		puts stderr $err
-	}
-	exit 1
-}
-}
-
+	R"tcl(
 # -- Branch Control
 #
 ${NS}::frame .branch
