@@ -26,3 +26,9 @@ void Repo::set_prefix(path dir)
 	m_prefix = move(dir);
 	set_var("_prefix", m_prefix.string());
 }
+
+void Repo::set_worktree(path dir)
+{
+	m_worktree = move(dir);
+	set_var("_gitworktree", m_worktree.string());
+}

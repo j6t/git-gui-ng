@@ -166,6 +166,50 @@ bool GitGui::discover_gitdir_prefix()
 	return false;
 }
 
+bool GitGui::discover_worktree()
+{
+	// v1.7.0 introduced --show-toplevel to return the canonical work-tree
+	fs::path _gitworktree = std::string("git rev-parse --show-toplevel"_tcl);
+
+	if (!repo.prefix().empty()) {
+		fs::path cdup = _gitworktree;
+		if (_gitworktree.empty()) {
+			for (const auto& el: repo.prefix()) {
+				if (el != ".")	// trailing slash produces this
+					cdup /= "..";
+			}
+		}
+		boost::system::error_code ec{};
+		fs::current_path(cdup, ec);
+		if (ec) {
+			"catch {wm withdraw .}"_tcl;
+			eval(R"tcl(error_popup [strcat [mc "Cannot move to top of working directory:"]
+				"\n\n" ")tcl" + ec.message() + "\"]");
+			return false;
+		}
+		_gitworktree = fs::current_path();
+	} else if (!"is_enabled bare"_tcli) {
+		if ("is_bare"_tcli) {
+			"catch {wm withdraw .}"_tcl;
+			R"tcl(error_popup [strcat [mc "Cannot use bare repository:"] "\n\n$_gitdir"])tcl"_tcl;
+			return false;
+		}
+		if (_gitworktree.empty())
+			_gitworktree = repo.gitdir().parent_path();
+		boost::system::error_code ec{};
+		fs::current_path(_gitworktree, ec);
+		if (ec) {
+			"catch {wm withdraw .}"_tcl;
+			eval(R"tcl(error_popup [strcat [mc "No working directory"] ")tcl" +
+				_gitworktree.string() + R"tcl(\n\n)tcl" + ec.message() + "\"]");
+			return false;
+		}
+		_gitworktree = fs::current_path();
+	}
+	repo.set_worktree(std::move(_gitworktree));
+	return true;
+}
+
 int GitGui::usage(const char* argv0, const std::string& args)
 {
 	std::string s = "mc usage:"_tcl;
@@ -425,7 +469,6 @@ if {[tk windowingsystem] eq "aqua"} {
 ## read only globals
 
 set _appname {Git Gui}
-set _gitworktree {}
 set _isbare {}
 set _gitexec {}
 set _githtmldir {}
@@ -1453,55 +1496,9 @@ if {![info exists env(SSH_ASKPASS)]} {
 	"load_config 0"_tcl;
 	"apply_config"_tcl;
 
+	if (!discover_worktree())
+		return 1;
 	R"tcl(
-# v1.7.0 introduced --show-toplevel to return the canonical work-tree
-if {[package vcompare $_git_version 1.7.0] >= 0} {
-	if { [is_Cygwin] } {
-		catch {set _gitworktree [exec cygpath --windows [git rev-parse --show-toplevel]]}
-	} else {
-		set _gitworktree [git rev-parse --show-toplevel]
-	}
-} else {
-	# try to set work tree from environment, core.worktree or use
-	# cdup to obtain a relative path to the top of the worktree. If
-	# run from the top, the ./ prefix ensures normalize expands pwd.
-	if {[catch { set _gitworktree $env(GIT_WORK_TREE) }]} {
-		set _gitworktree [get_config core.worktree]
-		if {$_gitworktree eq ""} {
-			set _gitworktree [file normalize ./[git rev-parse --show-cdup]]
-		}
-	}
-}
-
-if {$_prefix ne {}} {
-	if {$_gitworktree eq {}} {
-		regsub -all {[^/]+/} $_prefix ../ cdup
-	} else {
-		set cdup $_gitworktree
-	}
-	if {[catch {cd $cdup} err]} {
-		catch {wm withdraw .}
-		error_popup [strcat [mc "Cannot move to top of working directory:"] "\n\n$err"]
-		exit 1
-	}
-	set _gitworktree [pwd]
-	unset cdup
-} elseif {![is_enabled bare]} {
-	if {[is_bare]} {
-		catch {wm withdraw .}
-		error_popup [strcat [mc "Cannot use bare repository:"] "\n\n$_gitdir"]
-		exit 1
-	}
-	if {$_gitworktree eq {}} {
-		set _gitworktree [file dirname $_gitdir]
-	}
-	if {[catch {cd $_gitworktree} err]} {
-		catch {wm withdraw .}
-		error_popup [strcat [mc "No working directory"] " $_gitworktree:\n\n$err"]
-		exit 1
-	}
-	set _gitworktree [pwd]
-}
 set _reponame [file split [file normalize $_gitdir]]
 if {[lindex $_reponame end] eq {.git}} {
 	set _reponame [lindex $_reponame end-1]

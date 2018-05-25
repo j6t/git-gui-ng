@@ -20,6 +20,7 @@ private:
 	std::string find_subcommand(fs::path argv0, std::vector<std::string>& argv);
 	void determine_features(const std::string& subcommand, std::vector<std::string>& argv);
 	bool discover_gitdir_prefix();
+	bool discover_worktree();
 	int usage(const char* argv0, const std::string& args);
 	int do_blame_browser(const char* argv0,
 			const std::vector<std::string>& argv, bool is_blame);
