@@ -16,9 +16,12 @@ public:
 	const path& prefix() const { return m_prefix; }
 	void set_worktree(path dir);
 	const path& worktree() const { return m_worktree; }
+	void init_name();
+	const std::string name() const { return m_name; }
 
 private:
 	path m_gitdir;
 	path m_prefix;
 	path m_worktree;
+	std::string m_name;
 };

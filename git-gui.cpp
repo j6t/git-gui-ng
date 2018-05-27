@@ -1498,14 +1498,9 @@ if {![info exists env(SSH_ASKPASS)]} {
 
 	if (!discover_worktree())
 		return 1;
-	R"tcl(
-set _reponame [file split [file normalize $_gitdir]]
-if {[lindex $_reponame end] eq {.git}} {
-	set _reponame [lindex $_reponame end-1]
-} else {
-	set _reponame [lindex $_reponame end]
-}
+	repo.init_name();
 
+	R"tcl(
 set env(GIT_DIR) $_gitdir
 set env(GIT_WORK_TREE) $_gitworktree
 

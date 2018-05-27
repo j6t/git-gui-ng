@@ -32,3 +32,16 @@ void Repo::set_worktree(path dir)
 	m_worktree = move(dir);
 	set_var("_gitworktree", m_worktree.string());
 }
+
+void Repo::init_name()
+{
+	m_name = m_gitdir.filename().string();
+	if (m_name == ".git")
+	{
+		if (m_gitdir.has_parent_path())
+			m_name = m_gitdir.parent_path().filename().string();
+		else
+			m_name = boost::filesystem::current_path().filename().string();
+	}
+	set_var("_reponame", m_name);
+}
