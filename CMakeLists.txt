@@ -62,6 +62,7 @@ set(git-guing_SRCS
 	lib/remote.cpp
 	lib/remote_add.cpp
 	lib/remote_branch_delete.cpp
+	lib/repo.cpp
 	lib/search.cpp
 	lib/shortcut.cpp
 	lib/spellcheck.cpp

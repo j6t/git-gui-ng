@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "lib/repo.h"
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
@@ -23,4 +24,6 @@ private:
 			const std::vector<std::string>& argv, bool is_blame);
 	int do_subcommand(const std::string& subcommand, const char* argv0,
 			std::vector<std::string>& argv);
+
+	Repo repo;
 };
