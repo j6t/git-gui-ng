@@ -1,6 +1,9 @@
-# git-gui date processing support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui date processing support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "date.h"
+
+std::string lib_date = R"tcl(
 set git_month(Jan)  1
 set git_month(Feb)  2
 set git_month(Mar)  3
@@ -51,3 +54,4 @@ proc format_date {s} {
 proc reformat_date {s} {
 	return [format_date [parse_git_date $s]]
 }
+)tcl";

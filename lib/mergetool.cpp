@@ -1,6 +1,9 @@
-# git-gui merge conflict resolution
-# parts based on git-mergetool (c) 2006 Theodore Y. Ts'o
+// git-gui merge conflict resolution
+// parts based on git-mergetool (c) 2006 Theodore Y. Ts'o
 
+#include "mergetool.h"
+
+std::string lib_mergetool = R"tcl(
 proc merge_resolve_one {stage} {
 	global current_diff_path
 
@@ -398,3 +401,4 @@ proc merge_tool_finish {fd} {
 		reshow_diff
 	}
 }
+)tcl";

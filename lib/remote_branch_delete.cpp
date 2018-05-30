@@ -1,6 +1,9 @@
-# git-gui remote branch deleting support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui remote branch deleting support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "remote_branch_delete.h"
+
+std::string lib_remote_branch_delete = R"tcl(
 class remote_branch_delete {
 
 field w
@@ -357,3 +360,4 @@ method _read {cache fd} {
 }
 
 }
+)tcl";

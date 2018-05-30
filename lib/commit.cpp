@@ -1,6 +1,9 @@
-# git-gui misc. commit reading/writing support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui misc. commit reading/writing support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "commit.h"
+
+std::string lib_commit = R"tcl(
 proc load_last_commit {} {
 	global HEAD PARENT MERGE_HEAD commit_type ui_comm commit_author
 	global repo_config
@@ -545,3 +548,4 @@ proc commit_author_reset {details} {
 		array set env $details
 	}
 }
+)tcl";

@@ -1,6 +1,9 @@
-# git-gui desktop icon creators
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui desktop icon creators
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "shortcut.h"
+
+std::string lib_shortcut = R"tcl(
 proc do_windows_shortcut {} {
 	global _gitworktree
 	set fn [tk_getSaveFile \
@@ -141,3 +144,4 @@ proc do_macosx_app {} {
 		}
 	}
 }
+)tcl";

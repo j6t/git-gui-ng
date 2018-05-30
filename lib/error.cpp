@@ -1,6 +1,9 @@
-# git-gui branch (create/delete) support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui branch (create/delete) support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "error.h"
+
+std::string lib_error = R"tcl(
 proc _error_parent {} {
 	set p [grab current .]
 	if {$p eq {}} {
@@ -117,3 +120,4 @@ proc hook_failed_popup {hook msg {is_fatal 1}} {
 	wm deiconify $w
 	tkwait window $w
 }
+)tcl";

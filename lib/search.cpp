@@ -1,6 +1,9 @@
-# incremental search panel
-# based on code from gitk, Copyright (C) Paul Mackerras
+// incremental search panel
+// based on code from gitk, Copyright (C) Paul Mackerras
 
+#include "search.h"
+
+std::string lib_search = R"tcl(
 class searchbar {
 
 field w
@@ -298,3 +301,4 @@ method scrolled {} {
 }
 
 }
+)tcl";

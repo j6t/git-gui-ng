@@ -1,6 +1,9 @@
-# git-gui branch merge support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui branch merge support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "merge.h"
+
+std::string lib_merge = R"tcl(
 class merge {
 
 field w         ; # top level window
@@ -279,3 +282,4 @@ proc _reset_wait {fd} {
 }
 
 }
+)tcl";

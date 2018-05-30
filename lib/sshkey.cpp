@@ -1,6 +1,9 @@
-# git-gui about git-gui dialog
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui about git-gui dialog
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "sshkey.h"
+
+std::string lib_sshkey = R"tcl(
 proc find_ssh_key {} {
 	foreach name {
 		~/.ssh/id_dsa.pub ~/.ssh/id_ecdsa.pub ~/.ssh/id_ed25519.pub
@@ -129,3 +132,4 @@ proc read_sshkey_output {fd w} {
 	}
 	$w.contents configure -state disable
 }
+)tcl";

@@ -1,6 +1,9 @@
-# git-gui branch create support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui branch create support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "branch_create.h"
+
+std::string lib_branch_create = R"tcl(
 class branch_create {
 
 field w              ; # widget path
@@ -222,3 +225,4 @@ method _visible {} {
 }
 
 }
+)tcl";

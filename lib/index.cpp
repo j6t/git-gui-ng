@@ -1,6 +1,9 @@
-# git-gui index (add/remove) support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui index (add/remove) support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "index.h"
+
+std::string lib_index = R"tcl(
 proc _delete_indexlock {} {
 	if {[catch {file delete -- [gitdir index.lock]} err]} {
 		error_popup [strcat [mc "Unable to unlock the index."] "\n\n$err"]
@@ -482,3 +485,4 @@ proc do_select_commit_type {} {
 		}
 	}
 }
+)tcl";

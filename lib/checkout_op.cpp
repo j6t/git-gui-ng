@@ -1,6 +1,9 @@
-# git-gui commit checkout support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui commit checkout support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "checkout_op.h"
+
+std::string lib_checkout_op = R"tcl(
 class checkout_op {
 
 field w        {}; # our window (if we have one)
@@ -643,3 +646,4 @@ $err"]
 }
 
 }
+)tcl";

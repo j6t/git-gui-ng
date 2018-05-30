@@ -1,6 +1,9 @@
-# git-gui diff viewer
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui diff viewer
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "diff.h"
+
+std::string lib_diff = R"tcl(
 proc apply_tab_size {{firsttab {}}} {
 	global have_tk85 repo_config ui_diff
 
@@ -834,3 +837,4 @@ proc apply_range_or_line {x y} {
 
 	unlock_index
 }
+)tcl";

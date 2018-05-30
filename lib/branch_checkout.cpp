@@ -1,6 +1,9 @@
-# git-gui branch checkout support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui branch checkout support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "branch_checkout.h"
+
+std::string lib_branch_checkout = R"tcl(
 class branch_checkout {
 
 field w              ; # widget path
@@ -91,3 +94,4 @@ method _visible {} {
 }
 
 }
+)tcl";

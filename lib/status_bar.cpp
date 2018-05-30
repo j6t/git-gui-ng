@@ -1,6 +1,9 @@
-# git-gui status bar mega-widget
-# Copyright (C) 2007 Shawn Pearce
+// git-gui status bar mega-widget
+// Copyright (C) 2007 Shawn Pearce
 
+#include "status_bar.h"
+
+std::string lib_status_bar = R"tcl(
 class status_bar {
 
 field w         ; # our own window path
@@ -129,3 +132,4 @@ method _delete {current} {
 }
 
 }
+)tcl";

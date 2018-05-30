@@ -1,5 +1,8 @@
-# git-gui Tools menu dialogs
+// git-gui Tools menu dialogs
 
+#include "tools_dlg.h"
+
+std::string lib_tools_dlg = R"tcl(
 class tools_add {
 
 field w              ; # widget path
@@ -412,3 +415,4 @@ method _start {} {
 }
 
 }
+)tcl";

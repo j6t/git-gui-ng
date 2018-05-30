@@ -1,6 +1,9 @@
-# git-gui options editor
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui options editor
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "option.h"
+
+std::string lib_option = R"tcl(
 proc config_check_encodings {} {
 	global repo_config_new global_config_new
 
@@ -347,3 +350,4 @@ proc do_save_config {w} {
 	reshow_diff
 	destroy $w
 }
+)tcl";

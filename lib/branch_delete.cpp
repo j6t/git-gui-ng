@@ -1,6 +1,9 @@
-# git-gui branch delete support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui branch delete support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "branch_delete.h"
+
+std::string lib_branch_delete = R"tcl(
 class branch_delete {
 
 field w               ; # widget path
@@ -145,3 +148,4 @@ method _delete {} {
 }
 
 }
+)tcl";

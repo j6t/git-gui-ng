@@ -1,6 +1,9 @@
-# git-gui branch (create/delete) support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui branch (create/delete) support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "branch.h"
+
+std::string lib_branch = R"tcl(
 proc load_all_heads {} {
 	global some_heads_tracking
 
@@ -36,3 +39,4 @@ proc radio_selector {varname value args} {
 	upvar #0 $varname var
 	set var $value
 }
+)tcl";

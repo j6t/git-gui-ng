@@ -1,6 +1,9 @@
-# git-gui remote management
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui remote management
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "remote.h"
+
+std::string lib_remote = R"tcl(
 set some_heads_tracking 0;  # assume not
 
 proc is_tracking_branch {name} {
@@ -331,3 +334,4 @@ proc remove_remote {name} {
 
 	update_all_remotes_menu_entry
 }
+)tcl";

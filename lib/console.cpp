@@ -1,6 +1,9 @@
-# git-gui console support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui console support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "console.h"
+
+std::string lib_console = R"tcl(
 class console {
 
 field t_short
@@ -221,3 +224,4 @@ method _sb_set {sb orient first last} {
 }
 
 }
+)tcl";

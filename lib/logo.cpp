@@ -1,6 +1,9 @@
-# git-gui Git Gui logo
-# Copyright (C) 2007 Shawn Pearce
+// git-gui Git Gui logo
+// Copyright (C) 2007 Shawn Pearce
 
+#include "logo.h"
+
+std::string lib_logo = R"tcl(
 # Henrik Nyh's alternative Git logo, from his blog post
 # http://henrik.nyh.se/2007/06/alternative-git-logo-and-favicon
 #
@@ -41,3 +44,4 @@ proc git_logo {w} {
 		-image ::git_logo_data
 	return $w
 }
+)tcl";

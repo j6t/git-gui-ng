@@ -1,6 +1,9 @@
-# goto line number
-# based on code from gitk, Copyright (C) Paul Mackerras
+// goto line number
+// based on code from gitk, Copyright (C) Paul Mackerras
 
+#include "line.h"
+
+std::string lib_line = R"tcl(
 class linebar {
 
 field w
@@ -79,3 +82,4 @@ method _goto {{nohide {0}}} {
 }
 
 }
+)tcl";

@@ -1,6 +1,9 @@
-# git-gui transport (fetch/push) support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui transport (fetch/push) support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "transport.h"
+
+std::string lib_transport = R"tcl(
 proc fetch_from {remote} {
 	set w [console::new \
 		[mc "fetch %s" $remote] \
@@ -230,3 +233,4 @@ proc do_push_anywhere {} {
 	wm deiconify $w
 	tkwait window $w
 }
+)tcl";

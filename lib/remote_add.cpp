@@ -1,6 +1,9 @@
-# git-gui remote adding support
-# Copyright (C) 2008 Petr Baudis
+// git-gui remote adding support
+// Copyright (C) 2008 Petr Baudis
 
+#include "remote_add.h"
+
+std::string lib_remote_add = R"tcl(
 class remote_add {
 
 field w              ; # widget path
@@ -188,3 +191,4 @@ method _visible {} {
 }
 
 }
+)tcl";

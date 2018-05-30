@@ -1,6 +1,9 @@
-# git-gui simple class/object fake-alike
-# Copyright (C) 2007 Shawn Pearce
+// git-gui simple class/object fake-alike
+// Copyright (C) 2007 Shawn Pearce
 
+#include "class.h"
+
+std::string lib_class = R"tcl(
 proc class {class body} {
 	if {[namespace exists $class]} {
 		error "class $class already declared"
@@ -192,3 +195,4 @@ auto_mkindex_parser::command constructor {name args} {
 		[format { [list source [file join $dir %s]]} \
 		[file split $scriptFile]] "\n"
 }
+)tcl";

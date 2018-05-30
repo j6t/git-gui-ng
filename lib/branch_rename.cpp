@@ -1,6 +1,9 @@
-# git-gui branch rename support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui branch rename support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "branch_rename.h"
+
+std::string lib_branch_rename = R"tcl(
 class branch_rename {
 
 field w
@@ -132,3 +135,4 @@ method _rename {} {
 }
 
 }
+)tcl";

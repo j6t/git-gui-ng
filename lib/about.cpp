@@ -1,6 +1,9 @@
-# git-gui about git-gui dialog
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui about git-gui dialog
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "about.h"
+
+std::string lib_about = R"tcl(
 proc do_about {} {
 	global appvers copyright oguilib
 	global tcl_patchLevel tk_patchLevel
@@ -68,3 +71,4 @@ proc do_about {} {
 	wm title $w "About [appname]"
 	tkwait window $w
 }
+)tcl";

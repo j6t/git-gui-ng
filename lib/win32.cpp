@@ -1,6 +1,9 @@
-# git-gui Misc. native Windows 32 support
-# Copyright (C) 2007 Shawn Pearce
+// git-gui Misc. native Windows 32 support
+// Copyright (C) 2007 Shawn Pearce
 
+#include "win32.h"
+
+std::string lib_win32 = R"tcl(
 proc win32_read_lnk {lnk_path} {
 	return [exec cscript.exe \
 		/E:jscript \
@@ -24,3 +27,4 @@ proc win32_create_lnk {lnk_path lnk_exec lnk_dir} {
 		$lnk_dir \
 		$lnk_exec] $lnk_args
 }
+)tcl";

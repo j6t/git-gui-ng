@@ -1,6 +1,9 @@
-# git-gui object database management support
-# Copyright (C) 2006, 2007 Shawn Pearce
+// git-gui object database management support
+// Copyright (C) 2006, 2007 Shawn Pearce
 
+#include "database.h"
+
+std::string lib_database = R"tcl(
 proc do_stats {} {
 	global use_ttk NS
 	set fd [git_read count-objects -v]
@@ -113,3 +116,4 @@ Compress the database now?" $objects_current]] eq yes} {
 		}
 	}
 }
+)tcl";

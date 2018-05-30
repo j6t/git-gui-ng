@@ -1,6 +1,9 @@
-# git-gui spellchecking support through ispell/aspell
-# Copyright (C) 2008 Shawn Pearce
+// git-gui spellchecking support through ispell/aspell
+// Copyright (C) 2008 Shawn Pearce
 
+#include "spellcheck.h"
+
+std::string lib_spellcheck = R"tcl(
 class spellcheck {
 
 field s_fd      {} ; # pipe to ispell/aspell
@@ -413,3 +416,4 @@ proc available_langs {} {
 }
 
 }
+)tcl";

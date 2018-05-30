@@ -1,5 +1,8 @@
-# git-gui Tools menu implementation
+// git-gui Tools menu implementation
 
+#include "tools.h"
+
+std::string lib_tools = R"tcl(
 proc tools_list {} {
 	global repo_config
 
@@ -166,3 +169,4 @@ proc tools_complete {fullname w {ok 1}} {
 		rescan [list ui_status $msg]
 	}
 }
+)tcl";

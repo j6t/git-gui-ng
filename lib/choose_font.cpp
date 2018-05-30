@@ -1,6 +1,9 @@
-# git-gui font chooser
-# Copyright (C) 2007 Shawn Pearce
+// git-gui font chooser
+// Copyright (C) 2007 Shawn Pearce
 
+#include "choose_font.h"
+
+std::string lib_choose_font = R"tcl(
 class choose_font {
 
 field w
@@ -169,3 +172,4 @@ method _update {args} {
 }
 
 }
+)tcl";

@@ -1,6 +1,9 @@
-# Functions for supporting the use of themed Tk widgets in git-gui.
-# Copyright (C) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
+// Functions for supporting the use of themed Tk widgets in git-gui.
+// Copyright (C) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 
+#include "themed.h"
+
+std::string lib_themed = R"tcl(
 proc ttk_get_current_theme {} {
 	# Handle either current Tk or older versions of 8.5
 	if {[catch {set theme [ttk::style theme use]}]} {
@@ -353,3 +356,4 @@ proc on_choosefont {familyvar sizevar font} {
 # indent-tabs-mode: t
 # tab-width: 4
 # End:
+)tcl";

@@ -1,7 +1,10 @@
-# git-gui encoding support
-# Copyright (C) 2005 Paul Mackerras <paulus@samba.org>
-# (Copied from gitk, commit fd8ccbec4f0161)
+// git-gui encoding support
+// Copyright (C) 2005 Paul Mackerras <paulus@samba.org>
+// (Copied from gitk, commit fd8ccbec4f0161)
 
+#include "encoding.h"
+
+std::string lib_encoding = R"tcl(
 # This list of encoding names and aliases is distilled from
 # http://www.iana.org/assignments/character-sets.
 # Not all of them are supported by Tcl.
@@ -464,3 +467,4 @@ proc do_build_encoding_menu {emenu cmd {nodef 0}} {
 	}
 	build_encoding_submenu $emenu [list other [mc Other] $unused_grp] $cmd
 }
+)tcl";

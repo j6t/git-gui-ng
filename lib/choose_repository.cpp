@@ -1,6 +1,9 @@
-# git-gui Git repository chooser
-# Copyright (C) 2007 Shawn Pearce
+// git-gui Git repository chooser
+// Copyright (C) 2007 Shawn Pearce
 
+#include "choose_repository.h"
+
+std::string lib_choose_repository = R"tcl(
 class choose_repository {
 
 field top
@@ -1130,3 +1133,4 @@ method _do_open2 {} {
 }
 
 }
+)tcl";
