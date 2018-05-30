@@ -1,5 +1,12 @@
+// git-guing: the application
+// Copyright (C) 2018 Johannes Sixt
 
-const char code[] = R"tcl(
+#include "git-gui.h"
+#include <iostream>
+
+int GitGui::main(std::vector<std::string> argv)
+{
+	static const char code[] = R"tcl(
 set appvers {@@GITGUI_VERSION@@}
 set copyright [string map [list (c) \u00a9] {
 Copyright (c) 2006-2010 Shawn Pearce, et. al.
@@ -4045,4 +4052,20 @@ if {[is_enabled retcode]} {
 if {$picked && [is_config_true gui.autoexplore]} {
 	do_explore
 }
-)tcl";
+	)tcl";
+	return 0;
+}
+
+int main(int argc, char** argv)
+{
+	GitGui app;
+
+	try {
+		return app.main({argv, argv+argc});
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Error: " << e.what() << std::endl;
+	}
+	return 1;
+}
