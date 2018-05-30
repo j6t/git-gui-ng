@@ -5,7 +5,7 @@
 
 std::string lib_about = R"tcl(
 proc do_about {} {
-	global appvers copyright oguilib
+	global appvers copyright
 	global tcl_patchLevel tk_patchLevel
 	global ui_comm_spell NS use_ttk
 
@@ -47,8 +47,7 @@ proc do_about {} {
 
 	set d {}
 	append d "git wrapper: $::_git\n"
-	append d "git exec dir: [gitexec]\n"
-	append d "git-gui lib: $oguilib"
+	append d "git exec dir: [gitexec]"
 
 	paddedlabel $w.vers -text $v
 	pack $w.vers -side top -fill x -padx 5 -pady 5
