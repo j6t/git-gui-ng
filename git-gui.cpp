@@ -35,6 +35,7 @@
 #include "lib/remote.h"
 #include "lib/remote_add.h"
 #include "lib/remote_branch_delete.h"
+#include "lib/repo.h"
 #include "lib/search.h"
 #include "lib/shortcut.h"
 #include "lib/spellcheck.h"
@@ -128,6 +129,43 @@ void GitGui::determine_features(const std::string& subcommand, std::vector<std::
 	}
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+// repository setup
+
+// returns true if the repository picker is needed
+bool GitGui::discover_gitdir_prefix()
+{
+
+	fs::path _gitdir, _prefix;
+	auto gitdir_env = getenv("GIT_DIR");
+	if (gitdir_env)
+	{
+		_gitdir = gitdir_env;
+	}
+	else
+	{
+		try {
+			// beware that from the .git dir this sets _gitdir to .
+			// and _prefix to the empty string
+			_gitdir = std::string("git rev-parse --git-dir"_tcl);
+			_prefix = std::string("git rev-parse --show-prefix"_tcl);
+		} catch (TkError&) {
+			return true;
+		}
+	}
+
+	// we expand the _gitdir when it's just a single dot (i.e. when we're being
+	// run from the .git dir itself) lest the routines to find the worktree
+	// get confused
+	if (_gitdir == ".")
+		_gitdir = fs::current_path();
+
+	repo.set_gitdir(_gitdir.lexically_normal());
+	repo.set_prefix(std::move(_prefix));
+	return false;
+}
+
 int GitGui::usage(const char* argv0, const std::string& args)
 {
 	std::string s = "mc usage:"_tcl;
@@ -158,13 +196,12 @@ int GitGui::do_blame_browser(const char* argv0,
 	if (argv.empty())
 		return report_usage();
 
-	fs::path prefix = std::string("return $_prefix"_tcl);
 	fs::path path;
 	std::string head, jump_spec;
 	bool is_path = false;
 	for (const auto& a: argv)
 	{
-		auto p = prefix / a;
+		auto p = repo.prefix() / a;
 
 		if (is_path || fs::exists(p)) {
 			if (!path.empty())
@@ -199,7 +236,7 @@ int GitGui::do_blame_browser(const char* argv0,
 			path = fs::path(head).lexically_normal();
 			head.clear();
 		} else {
-			path = (prefix / head).lexically_normal();
+			path = (repo.prefix() / head).lexically_normal();
 			head.clear();
 		}
 	}
@@ -388,7 +425,6 @@ if {[tk windowingsystem] eq "aqua"} {
 ## read only globals
 
 set _appname {Git Gui}
-set _gitdir {}
 set _gitworktree {}
 set _isbare {}
 set _gitexec {}
@@ -1401,47 +1437,23 @@ set have_tk85 [expr {[package vcompare $tk_version "8.5"] >= 0}]
 if {![info exists env(SSH_ASKPASS)]} {
 	set env(SSH_ASKPASS) [gitexec git-gui--askpass]
 }
+	)tcl"_tcl;
 
-######################################################################
-##
-## repository setup
+	bool picked = discover_gitdir_prefix();
+	if (picked)
+	{
+		"load_config 1"_tcl;
+		"apply_config"_tcl;
+		"choose_repository::pick"_tcl;
+		repo.set_gitdir(std::string("return $_gitdir"_tcl));
+		repo.set_prefix(std::string("return $_prefix"_tcl));
+	}
 
-set picked 0
-if {[catch {
-		set _gitdir $env(GIT_DIR)
-		set _prefix {}
-		}]
-	&& [catch {
-		# beware that from the .git dir this sets _gitdir to .
-		# and _prefix to the empty string
-		set _gitdir [git rev-parse --git-dir]
-		set _prefix [git rev-parse --show-prefix]
-	} err]} {
-	load_config 1
-	apply_config
-	choose_repository::pick
-	set picked 1
-}
+	// _gitdir exists, so try loading the config
+	"load_config 0"_tcl;
+	"apply_config"_tcl;
 
-# we expand the _gitdir when it's just a single dot (i.e. when we're being
-# run from the .git dir itself) lest the routines to find the worktree
-# get confused
-if {$_gitdir eq "."} {
-	set _gitdir [pwd]
-}
-
-if {![file isdirectory $_gitdir] && [is_Cygwin]} {
-	catch {set _gitdir [exec cygpath --windows $_gitdir]}
-}
-if {![file isdirectory $_gitdir]} {
-	catch {wm withdraw .}
-	error_popup [strcat [mc "Git directory not found:"] "\n\n$_gitdir"]
-	exit 1
-}
-# _gitdir exists, so try loading the config
-load_config 0
-apply_config
-
+	R"tcl(
 # v1.7.0 introduced --show-toplevel to return the canonical work-tree
 if {[package vcompare $_git_version 1.7.0] >= 0} {
 	if { [is_Cygwin] } {
@@ -4082,10 +4094,10 @@ if {[is_enabled multicommit] && ![is_config_false gui.gcwarning]} {
 if {[is_enabled retcode]} {
 	bind . <Destroy> {+terminate_me %W}
 }
-if {$picked && [is_config_true gui.autoexplore]} {
-	do_explore
-}
 	)tcl"_tcl;
+	if (picked && "is_config_true gui.autoexplore"_tcli) {
+		"do_explore"_tcl;
+	}
 
 	runEventLoop();
 	return 0;

@@ -3,6 +3,19 @@
 
 #pragma once
 
+#include <boost/filesystem.hpp>
+
 class Repo
 {
+	using path = boost::filesystem::path;
+
+public:
+	void set_gitdir(path dir);
+	const path& gitdir() const { return m_gitdir; }
+	void set_prefix(path dir);
+	const path& prefix() const { return m_prefix; }
+
+private:
+	path m_gitdir;
+	path m_prefix;
 };
