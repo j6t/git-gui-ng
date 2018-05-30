@@ -8,6 +8,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(TCL REQUIRED)
 include_directories(${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
 
+find_package(Boost 1.60 REQUIRED COMPONENTS system filesystem)
+include_directories(${Boost_INCLUDE_DIR})
+add_definitions(
+	-DBOOST_SYSTEM_NO_DEPRECATED=1
+	-DBOOST_FILESYSTEM_NO_DEPRECATED=1
+)
+
 if(NOT CPPTK_SOURCE_DIR)
 	find_path(CPPTK_SOURCE_DIR
 		NAMES cpptk.h
@@ -66,6 +73,7 @@ set(git-guing_SRCS
 	lib/transport.cpp
 	lib/win32.cpp
 	${CPPTK_SOURCE_DIR}/base/cpptkbase.cc
+	${CPPTK_SOURCE_DIR}/cpptk.cc
 )
 
 add_executable(git-guing ${git-guing_SRCS})
@@ -73,4 +81,6 @@ add_executable(git-guing ${git-guing_SRCS})
 target_link_libraries(git-guing
 	${TK_LIBRARY}
 	${TCL_LIBRARY}
+	${Boost_FILESYSTEM_LIBRARY}
+	${Boost_SYSTEM_LIBRARY}
 )

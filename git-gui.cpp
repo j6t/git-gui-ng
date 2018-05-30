@@ -3,6 +3,7 @@
 
 #include "git-gui.h"
 #include "cpptk.h"
+#include <algorithm>
 #include <iostream>
 
 #include "lib/about.h"
@@ -49,10 +50,100 @@ using namespace Tk;
 using namespace Tk::literals;
 
 
-int GitGui::main(std::vector<std::string> argv)
+void GitGui::check_for_trace(std::vector<std::string>& argv)
 {
-	"set argv0 git-gui"_tcl;
-	"set argv { }"_tcl;
+	auto pos = std::find(argv.begin(), argv.end(), "--trace");
+	if (pos != argv.end()) {
+		argv.erase(pos);
+		"set _trace 1"_tcl;
+		R"tcl(if {[tk windowingsystem] eq "win32"} { console show })tcl"_tcl;
+	} else {
+		"set _trace 0"_tcl;
+	}
+}
+
+std::string GitGui::find_subcommand(fs::path argv0, std::vector<std::string>& argv)
+{
+	argv0 = argv0.filename();
+
+	eval("set argv0 \"" + details::quote(argv0.string()) + '"');
+
+	std::string subcommand = argv0.string();
+	if (subcommand.substr(0, 4) == "git-")
+		subcommand.erase(0, 4);
+
+	if (subcommand.substr(0, 3) == "gui") {
+		if (!argv.empty()) {
+			subcommand = argv.front();
+			argv.erase(argv.begin());
+		} else {
+			subcommand = "gui";
+		}
+	}
+	eval("set subcommand " + subcommand);
+	return subcommand;
+}
+
+void GitGui::determine_features(const std::string& subcommand, std::vector<std::string>& argv)
+{
+	"enable_option multicommit"_tcl;
+	"enable_option branch"_tcl;
+	"enable_option transport"_tcl;
+	"disable_option bare"_tcl;
+
+	if (subcommand == "browser" || subcommand == "blame")
+	{
+		"enable_option bare"_tcl;
+
+		"disable_option multicommit"_tcl;
+		"disable_option branch"_tcl;
+		"disable_option transport"_tcl;
+	}
+	else if (subcommand == "citool")
+	{
+		"enable_option singlecommit"_tcl;
+		"enable_option retcode"_tcl;
+
+		"disable_option multicommit"_tcl;
+		"disable_option branch"_tcl;
+		"disable_option transport"_tcl;
+
+		auto i = argv.begin();
+		for (; i != argv.end(); ++i)
+		{
+			if (*i == "--amend")
+			{
+				"enable_option initialamend"_tcl;
+			}
+			else if (*i == "--nocommit")
+			{
+				"enable_option nocommit"_tcl;
+				"enable_option nocommitmsg"_tcl;
+			}
+			else if (*i == "--commitmsg")
+			{
+				"disable_option nocommitmsg"_tcl;
+			}
+			else
+			{
+				break;
+			}
+		}
+		argv.erase(argv.begin(), i);
+	}
+
+	std::string cmd;
+	for (const auto& a: argv)
+	{
+		cmd += " \"" + a + '"';
+	}
+	eval("set argv [list" + cmd + ']');
+}
+
+int GitGui::main(const char* argv0, std::vector<std::string> argv)
+{
+	Tk::init(argv0);
+
 	R"tcl(
 set appvers {@@GITGUI_VERSION@@}
 set copyright [string map [list (c) \u00a9] {
@@ -163,16 +254,11 @@ set _reponame {}
 set _iscygwin {}
 set _search_path {}
 set _shellpath {@@SHELL_PATH@@}
+	)tcl"_tcl;
 
-set _trace [lsearch -exact $argv --trace]
-if {$_trace >= 0} {
-	set argv [lreplace $argv $_trace $_trace]
-	set _trace 1
-	if {[tk windowingsystem] eq "win32"} { console show }
-} else {
-	set _trace 0
-}
+	check_for_trace(argv);
 
+	R"tcl(
 # variable for the last merged branch (useful for a default when deleting
 # branches).
 set _last_merged_branch {}
@@ -1156,69 +1242,12 @@ proc load_config {include_global} {
 		}
 	}
 }
+	)tcl"_tcl;
 
-######################################################################
-##
-## feature option selection
+	auto subcommand = find_subcommand(argv0, argv);
+	determine_features(subcommand, argv);
 
-if {[regexp {^git-(.+)$} [file tail $argv0] _junk subcommand]} {
-	unset _junk
-} else {
-	set subcommand gui
-}
-if {$subcommand eq {gui.sh}} {
-	set subcommand gui
-}
-if {$subcommand eq {gui} && [llength $argv] > 0} {
-	set subcommand [lindex $argv 0]
-	set argv [lrange $argv 1 end]
-}
-
-enable_option multicommit
-enable_option branch
-enable_option transport
-disable_option bare
-
-switch -- $subcommand {
-browser -
-blame {
-	enable_option bare
-
-	disable_option multicommit
-	disable_option branch
-	disable_option transport
-}
-citool {
-	enable_option singlecommit
-	enable_option retcode
-
-	disable_option multicommit
-	disable_option branch
-	disable_option transport
-
-	while {[llength $argv] > 0} {
-		set a [lindex $argv 0]
-		switch -- $a {
-		--amend {
-			enable_option initialamend
-		}
-		--nocommit {
-			enable_option nocommit
-			enable_option nocommitmsg
-		}
-		--commitmsg {
-			disable_option nocommitmsg
-		}
-		default {
-			break
-		}
-		}
-
-		set argv [lrange $argv 1 end]
-	}
-}
-}
-
+	R"tcl(
 ######################################################################
 ##
 ## execution environment
@@ -4065,7 +4094,7 @@ int main(int argc, char** argv)
 	GitGui app;
 
 	try {
-		return app.main({argv, argv+argc});
+		return app.main(argv[0], {argv+1, argv+argc});
 	}
 	catch (const std::exception& e)
 	{
