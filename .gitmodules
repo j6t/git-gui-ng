@@ -1,0 +1,3 @@
+[submodule "cpptk"]
+	path = C++Tk
+	url = ../cpptk

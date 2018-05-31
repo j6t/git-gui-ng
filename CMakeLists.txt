@@ -8,12 +8,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(TCL REQUIRED)
 include_directories(${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
 
+if(NOT CPPTK_SOURCE_DIR)
+	find_path(CPPTK_SOURCE_DIR
+		NAMES cpptk.h
+		PATHS ${CMAKE_CURRENT_SOURCE_DIR}/C++Tk
+		DOC "where the source code of C++Tk is located")
+endif(NOT CPPTK_SOURCE_DIR)
 if(CPPTK_SOURCE_DIR)
 	include_directories(${CPPTK_SOURCE_DIR})
 else(CPPTK_SOURCE_DIR)
 	message(SEND_ERROR
 		"C++Tk source directory not found.
-Please specify -DCPPTK_SOURCE_DIR=/path/to/C++Tk with the cmake command.")
+Please specify -DCPPTK_SOURCE_DIR=/path/to/C++Tk with the cmake command \
+or initialize the submodule in directory C++Tk:
+   git submodule update --init")
 endif(CPPTK_SOURCE_DIR)
 
 set(git-guing_SRCS
