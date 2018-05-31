@@ -5,6 +5,17 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(TCL REQUIRED)
+include_directories(${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
+
+if(CPPTK_SOURCE_DIR)
+	include_directories(${CPPTK_SOURCE_DIR})
+else(CPPTK_SOURCE_DIR)
+	message(SEND_ERROR
+		"C++Tk source directory not found.
+Please specify -DCPPTK_SOURCE_DIR=/path/to/C++Tk with the cmake command.")
+endif(CPPTK_SOURCE_DIR)
+
 set(git-guing_SRCS
 	git-gui.cpp
 	lib/about.cpp
@@ -46,6 +57,12 @@ set(git-guing_SRCS
 	lib/tools_dlg.cpp
 	lib/transport.cpp
 	lib/win32.cpp
+	${CPPTK_SOURCE_DIR}/base/cpptkbase.cc
 )
 
 add_executable(git-guing ${git-guing_SRCS})
+
+target_link_libraries(git-guing
+	${TK_LIBRARY}
+	${TCL_LIBRARY}
+)

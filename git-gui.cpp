@@ -2,11 +2,15 @@
 // Copyright (C) 2018 Johannes Sixt
 
 #include "git-gui.h"
+#include "cpptk.h"
 #include <iostream>
+
+using namespace Tk::literals;
+
 
 int GitGui::main(std::vector<std::string> argv)
 {
-	static const char code[] = R"tcl(
+	R"tcl(
 set appvers {@@GITGUI_VERSION@@}
 set copyright [string map [list (c) \u00a9] {
 Copyright (c) 2006-2010 Shawn Pearce, et. al.
@@ -4052,7 +4056,7 @@ if {[is_enabled retcode]} {
 if {$picked && [is_config_true gui.autoexplore]} {
 	do_explore
 }
-	)tcl";
+	)tcl"_tcl;
 	return 0;
 }
 
