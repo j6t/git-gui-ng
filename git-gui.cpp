@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <iostream>
 
-#include "lib/about.h"
 #include "lib/blame.h"
 #include "lib/branch.h"
 #include "lib/branch_checkout.h"
@@ -51,6 +50,24 @@
 
 using namespace Tk;
 using namespace Tk::literals;
+
+const std::string GitGui::appname = "Git Gui";
+const std::string GitGui::appvers = GITGUING_VERSION;
+const std::string GitGui::copyright = u8R"copy(
+Copyright © 2006-2010 Shawn Pearce, et. al.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.)copy";
 
 
 void GitGui::check_for_trace(std::vector<std::string>& argv)
@@ -374,24 +391,7 @@ int GitGui::main(const char* argv0, std::vector<std::string> argv)
 	bindtextdomain("git-gui", LOCALEDIR);
 	textdomain("git-gui");
 
-"set appvers {" GITGUING_VERSION
-	R"tcl(}
-set copyright [string map [list (c) \u00a9] {
-Copyright (c) 2006-2010 Shawn Pearce, et. al.
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, see <http://www.gnu.org/licenses/>.}]
-
+	R"tcl(
 ######################################################################
 ##
 ## Tcl/Tk sanity check
@@ -1352,7 +1352,6 @@ You are using [git-version]:
 	)tcl"_tcl;
 
 	eval(lib_class);		// must be the first one
-	eval(lib_about);
 	eval(lib_blame);
 	eval(lib_branch);
 	eval(lib_branch_checkout);
@@ -3169,15 +3168,16 @@ if {[is_enabled multicommit] || [is_enabled singlecommit]} {
 #
 .mbar add cascade -label [mc Help] -menu .mbar.help
 menu .mbar.help
-
-if {[is_MacOSX]} {
-	.mbar.apple add command -label [mc "About %s" [appname]] \
-		-command do_about
-	.mbar.apple add separator
-} else {
-	.mbar.help add command -label [mc "About %s" [appname]] \
-		-command do_about
-}
+	)tcl"_tcl;
+	if ("is_MacOSX"_tcli) {
+		".mbar.apple" << add(command) -menulabel(mc("About %s", appname))
+			-command(do_about);
+		".mbar.apple" << add(separator);
+	} else {
+		".mbar.help" << add(command) -menulabel(mc("About %s", appname))
+			-command(do_about);
+	}
+	R"tcl(
 . configure -menu .mbar
 
 set doc_path [githtmldir]

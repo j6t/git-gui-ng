@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.2)
 project(GitGUING)
 set(GITGUING_VERSION 0.30.0)
 
+include(CheckCXXCompilerFlag)
 include(FindIntl)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -88,6 +89,11 @@ set(git-guing_SRCS
 )
 
 add_executable(git-guing ${git-guing_SRCS})
+
+check_cxx_compiler_flag("-Wno-parentheses" CXX_WARN_PARENTHESES)
+if(CXX_WARN_PARENTHESES)
+	target_compile_options(git-guing PRIVATE "-Wno-parentheses")
+endif(CXX_WARN_PARENTHESES)
 
 target_include_directories(git-guing PUBLIC ${CMAKE_BINARY_DIR})
 target_link_libraries(git-guing

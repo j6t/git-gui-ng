@@ -27,5 +27,10 @@ private:
 	int do_subcommand(const std::string& subcommand, const char* argv0,
 			std::vector<std::string>& argv);
 
+	static void do_about();
+
 	Repo repo;
+	static const std::string appname;
+	static const std::string appvers;
+	static const std::string copyright;
 };

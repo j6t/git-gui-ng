@@ -162,21 +162,6 @@ proc tlabel {w args} {
 	}
 }
 
-# The padded label gets used in the about class.
-proc paddedlabel {w args} {
-	global use_ttk
-	if {$use_ttk} {
-		eval [linsert $args 0 ttk::label $w -style Padded.TLabel]
-	} else {
-		eval [linsert $args 0 label $w \
-				  -padx 5 -pady 5 \
-				  -justify left \
-				  -anchor w \
-				  -borderwidth 1 \
-				  -relief solid]
-	}
-}
-
 # Create a toplevel for use as a dialog.
 # If available, sets the EWMH dialog hint and if ttk is enabled
 # place a themed frame over the surface.
