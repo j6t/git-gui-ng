@@ -14,8 +14,9 @@ include_directories(${Boost_INCLUDE_DIR})
 add_definitions(
 	-DBOOST_SYSTEM_NO_DEPRECATED=1
 	-DBOOST_FILESYSTEM_NO_DEPRECATED=1
-	-DLOCALEDIR="${prefix}/share/locale"
 )
+
+configure_file(git-gui-config.h.in git-gui-config.h ESCAPE_QUOTES)
 
 if(NOT CPPTK_SOURCE_DIR)
 	find_path(CPPTK_SOURCE_DIR
@@ -82,6 +83,7 @@ set(git-guing_SRCS
 
 add_executable(git-guing ${git-guing_SRCS})
 
+target_include_directories(git-guing PUBLIC ${CMAKE_BINARY_DIR})
 target_link_libraries(git-guing
 	${TK_LIBRARY}
 	${TCL_LIBRARY}

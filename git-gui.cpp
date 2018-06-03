@@ -2,6 +2,7 @@
 // Copyright (C) 2018 Johannes Sixt
 
 #include "git-gui.h"
+#include "git-gui-config.h"
 #include "cpptk.h"
 #include "lib/i18n.h"
 #include <algorithm>
@@ -373,8 +374,8 @@ int GitGui::main(const char* argv0, std::vector<std::string> argv)
 	bindtextdomain("git-gui", LOCALEDIR);
 	textdomain("git-gui");
 
-	R"tcl(
-set appvers {@@GITGUI_VERSION@@}
+"set appvers {" GITGUING_VERSION
+	R"tcl(}
 set copyright [string map [list (c) \u00a9] {
 Copyright (c) 2006-2010 Shawn Pearce, et. al.
 

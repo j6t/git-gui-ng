@@ -1,0 +1,4 @@
+// git-guing build time configuration
+
+#define GITGUING_VERSION "${GITGUING_VERSION}"
+#define LOCALEDIR "${prefix}/share/locale"
