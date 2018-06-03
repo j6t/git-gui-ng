@@ -202,15 +202,16 @@ bool GitGui::discover_worktree()
 		fs::current_path(cdup, ec);
 		if (ec) {
 			"catch {wm withdraw .}"_tcl;
-			eval(R"tcl(error_popup [strcat [mc "Cannot move to top of working directory:"]
-				"\n\n" ")tcl" + ec.message() + "\"]");
+			error_popup(mc("Cannot move to top of working directory:")
+				+ "\n\n" + ec.message());
 			return false;
 		}
 		_gitworktree = fs::current_path();
 	} else if (!"is_enabled bare"_tcli) {
 		if ("is_bare"_tcli) {
 			"catch {wm withdraw .}"_tcl;
-			R"tcl(error_popup [strcat [mc "Cannot use bare repository:"] "\n\n$_gitdir"])tcl"_tcl;
+			error_popup(mc("Cannot use bare repository:")
+				+ "\n\n" + repo.gitdir().string());
 			return false;
 		}
 		if (_gitworktree.empty())
@@ -219,8 +220,9 @@ bool GitGui::discover_worktree()
 		fs::current_path(_gitworktree, ec);
 		if (ec) {
 			"catch {wm withdraw .}"_tcl;
-			eval(R"tcl(error_popup [strcat [mc "No working directory"] ")tcl" +
-				_gitworktree.string() + R"tcl(\n\n)tcl" + ec.message() + "\"]");
+			error_popup(mc("No working directory")
+				+ " " + _gitworktree.string()
+				+ "\n\n" + ec.message());
 			return false;
 		}
 		_gitworktree = fs::current_path();

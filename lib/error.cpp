@@ -2,6 +2,34 @@
 // Copyright (C) 2006, 2007 Shawn Pearce
 
 #include "error.h"
+#include "../git-gui.h"
+#include "i18n.h"
+#include <cpptk.h>
+
+using namespace Tk;
+
+static std::string error_parent()
+{
+	std::string p = "grab current ."_tcls;
+	if (p.empty())
+		p = ".";
+	return p;
+}
+
+void GitGui::error_popup(const std::string& msg)
+{
+	auto t = appname;
+	if (!repo.name().empty())
+		t += " (" + repo.name() + ")";
+	auto parentw = error_parent();
+	int setparent = winfo(ismapped, parentw);
+	tk_messageBox()
+		-icon(error)
+		-messagetype(ok)
+		-title(mc("%s: error", t))
+		-messagetext(msg)
+		-(setparent ? parent(parentw) : ""_tcl);
+}
 
 std::string lib_error = R"tcl(
 proc _error_parent {} {

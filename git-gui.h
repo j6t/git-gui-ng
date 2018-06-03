@@ -27,6 +27,8 @@ private:
 	int do_subcommand(const std::string& subcommand, const char* argv0,
 			std::vector<std::string>& argv);
 
+	void error_popup(const std::string& msg);
+
 	static void do_about();
 
 	Repo repo;
