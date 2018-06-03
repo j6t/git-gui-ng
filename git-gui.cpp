@@ -3,6 +3,7 @@
 
 #include "git-gui.h"
 #include "cpptk.h"
+#include "lib/i18n.h"
 #include <algorithm>
 #include <iostream>
 
@@ -212,14 +213,14 @@ bool GitGui::discover_worktree()
 
 int GitGui::usage(const char* argv0, const std::string& args)
 {
-	std::string s = "mc usage:"_tcl;
+	std::string s = mc("usage:");
 	s += " ";
 	s += argv0;
 	s += " " + args;
 	if (std::string("tk windowingsystem"_tcl) == "win32") {
 		wm(withdraw, ".");
 		tk_messageBox() -icon(info) -messagetext(s)
-			-title(std::string("mc Usage"_tcl));
+			-title(mc("Usage"));
 	} else {
 		std::cerr << s << std::endl;
 	}
@@ -294,7 +295,7 @@ int GitGui::do_blame_browser(const char* argv0,
 			} catch (TkError& e) {
 				std::string err = e.what();
 				if (std::string("tk windowingsystem"_tcl) == "win32") {
-					tk_messageBox() -icon(error) -title(std::string("mc Error"_tcl)) -messagetext(err);
+					tk_messageBox() -icon(error) -title(mc("Error")) -messagetext(err);
 				} else {
 					std::cerr << err << std::endl;
 				}
@@ -325,8 +326,8 @@ int GitGui::do_blame_browser(const char* argv0,
 			tk_messageBox()
 				-icon(error)
 				-messagetype(ok)
-				-title(std::string(R"tcl(mc "git-gui: fatal error")tcl"_tcl))
-				-messagetext(std::string(eval(R"tcl(mc "fatal: cannot stat path %s: No such file or directory" ")tcl" + path.string() + '"')));
+				-title(mc("git-gui: fatal error"))
+				-messagetext(mc("fatal: cannot stat path %s: No such file or directory", path.string()));
 			return 2;
 		}
 		eval("blame::new \"" + head + "\" \"" + path.string() + "\" \"" + jump_spec + '"');
@@ -351,11 +352,11 @@ int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
 	}
 	else
 	{
-		auto s = std::string("mc usage:"_tcl) + " " + argv0 + " [{blame|browser|citool}]";
+		auto s = mc("usage:") + " " + argv0 + " [{blame|browser|citool}]";
 		if (std::string("tk windowingsystem"_tcl) == "win32") {
 			wm(withdraw, ".");
 			tk_messageBox() -icon(error) -messagetext(s)
-				-title(std::string("mc Usage"_tcl));
+				-title(mc("Usage"));
 		} else {
 			std::cerr << s << std::endl;
 		}

@@ -53,6 +53,7 @@ set(git-guing_SRCS
 	lib/diff.cpp
 	lib/encoding.cpp
 	lib/error.cpp
+	lib/i18n.cpp
 	lib/index.cpp
 	lib/line.cpp
 	lib/logo.cpp
