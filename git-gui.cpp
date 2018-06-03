@@ -369,6 +369,10 @@ int GitGui::main(const char* argv0, std::vector<std::string> argv)
 {
 	Tk::init(argv0);
 
+	setlocale (LC_ALL, "");
+	bindtextdomain("git-gui", LOCALEDIR);
+	textdomain("git-gui");
+
 	R"tcl(
 set appvers {@@GITGUI_VERSION@@}
 set copyright [string map [list (c) \u00a9] {

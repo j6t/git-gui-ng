@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "libintl.h"
 #include <initializer_list>
 #include <string>
 
@@ -12,7 +13,7 @@ template<class... ARGS>
 std::string mc(const char* text, ARGS&&... args)
 {
 	if (sizeof...(ARGS) > 0)
-		return formatMessage(text, { std::forward<ARGS>(args)... });
+		return formatMessage(gettext(text), { std::forward<ARGS>(args)... });
 	else
-		return text;
+		return gettext(text);
 }

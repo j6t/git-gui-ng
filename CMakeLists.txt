@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
-project(GitGUI18)
+project(GitGUING)
+set(GITGUING_VERSION 0.30.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +14,7 @@ include_directories(${Boost_INCLUDE_DIR})
 add_definitions(
 	-DBOOST_SYSTEM_NO_DEPRECATED=1
 	-DBOOST_FILESYSTEM_NO_DEPRECATED=1
+	-DLOCALEDIR="${prefix}/share/locale"
 )
 
 if(NOT CPPTK_SOURCE_DIR)
@@ -85,4 +87,19 @@ target_link_libraries(git-guing
 	${TCL_LIBRARY}
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
+)
+
+add_subdirectory(po)
+
+add_custom_target(git-gui.pot-update
+	COMMAND xgettext
+		-o po/git-gui.pot
+		--default-domain=git-gui
+		--add-comments=TRANSLATORS:
+		--package-version=${GITGUING_VERSION}
+		--package-name=${CMAKE_PROJECT_NAME}
+		-kmc
+		${git-guing_SRCS}
+	DEPENDS ${git-guing_SRCS}
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
