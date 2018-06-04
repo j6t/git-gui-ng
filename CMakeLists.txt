@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.2)
 project(GitGUING)
 set(GITGUING_VERSION 0.30.0)
+
+include(FindIntl)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,7 +12,11 @@ find_package(TCL REQUIRED)
 include_directories(${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
 
 find_package(Boost 1.60 REQUIRED COMPONENTS system filesystem)
-include_directories(${Boost_INCLUDE_DIR})
+
+include_directories(
+	${Boost_INCLUDE_DIR}
+	${Intl_INCLUDE_DIRS}
+)
 add_definitions(
 	-DBOOST_SYSTEM_NO_DEPRECATED=1
 	-DBOOST_FILESYSTEM_NO_DEPRECATED=1
@@ -89,6 +95,7 @@ target_link_libraries(git-guing
 	${TCL_LIBRARY}
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
+	${Intl_LIBRARIES}
 )
 
 add_subdirectory(po)
