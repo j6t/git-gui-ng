@@ -1,8 +1,8 @@
 .DS_Store
-config.mak
-Git Gui.app*
-git-gui.tcl
-GIT-VERSION-FILE
-GIT-GUI-VARS
-git-gui
-lib/tclIndex
+/CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+/git-gui-config.h
+/git-guing
+/git-guing.exe
