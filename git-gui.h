@@ -29,9 +29,14 @@ private:
 
 	void error_popup(const std::string& msg);
 
+	std::string M1T(std::string key) const;
+
 	static void do_about();
 
 	Repo repo;
+	std::string m1t_pfx;
+	std::string tools_menubar;
+
 	static const std::string appname;
 	static const std::string appvers;
 	static const std::string copyright;

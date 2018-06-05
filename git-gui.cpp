@@ -50,6 +50,7 @@
 
 using namespace Tk;
 using namespace Tk::literals;
+using namespace std::literals;
 
 const std::string GitGui::appname = "Git Gui";
 const std::string GitGui::appvers = GITGUING_VERSION;
@@ -383,6 +384,11 @@ int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
 		return 2;
 	}
 	return 0;
+}
+
+std::string GitGui::M1T(std::string key) const
+{
+	return m1t_pfx + std::move(key);
 }
 
 int GitGui::main(const char* argv0, std::vector<std::string> argv)
@@ -1127,7 +1133,11 @@ if {[is_MacOSX]} {
 	set M1B Control
 	set M1T Ctrl
 }
+	)tcl"_tcl;
 
+	m1t_pfx = "expr {$M1T}"_tcls + '-';
+
+	R"tcl(
 proc bind_button3 {w cmd} {
 	bind $w <Any-Button-3> $cmd
 	if {[is_MacOSX]} {
@@ -2852,71 +2862,75 @@ proc show_less_context {} {
 ## ui construction
 
 set ui_comm {}
+	)tcl"_tcl;
 
-# -- Menu Bar
-#
-menu .mbar -tearoff 0
-if {[is_MacOSX]} {
-	# -- Apple Menu (Mac OS X only)
-	#
-	.mbar add cascade -label Apple -menu .mbar.apple
-	menu .mbar.apple
-}
-.mbar add cascade -label [mc Repository] -menu .mbar.repository
-.mbar add cascade -label [mc Edit] -menu .mbar.edit
-if {[is_enabled branch]} {
-	.mbar add cascade -label [mc Branch] -menu .mbar.branch
-}
-if {[is_enabled multicommit] || [is_enabled singlecommit]} {
-	.mbar add cascade -label [mc Commit@@noun] -menu .mbar.commit
-}
-if {[is_enabled transport]} {
-	.mbar add cascade -label [mc Merge] -menu .mbar.merge
-	.mbar add cascade -label [mc Remote] -menu .mbar.remote
-}
-if {[is_enabled multicommit] || [is_enabled singlecommit]} {
-	.mbar add cascade -label [mc Tools] -menu .mbar.tools
-}
+	// -- Menu Bar
+	//
+	auto mbar = ".mbar"s;
+	menu(mbar) -tearoff(0);
+	if ("is_MacOSX"_tcli) {
+		// -- Apple Menu (Mac OS X only)
+		//
+		mbar << add(cascade) -menulabel("Apple") -submenu(mbar + ".apple"s);
+		menu(mbar + ".apple"s);
+	}
+	mbar << add(cascade) -menulabel(mc("Repository")) -submenu(mbar + ".repository"s);
+	mbar << add(cascade) -menulabel(mc("Edit")) -submenu(mbar + ".edit"s);
+	if ("is_enabled branch"_tcli) {
+		mbar << add(cascade) -menulabel(mc("Branch")) -submenu(mbar + ".branch"s);
+	}
+	if ("is_enabled multicommit"_tcli || "is_enabled singlecommit"_tcli) {
+		mbar << add(cascade) -menulabel(mc("Commit@@noun")) -submenu(mbar + ".commit"s);
+	}
+	if ("is_enabled transport"_tcli) {
+		mbar << add(cascade) -menulabel(mc("Merge")) -submenu(mbar + ".merge"s);
+		mbar << add(cascade) -menulabel(mc("Remote")) -submenu(mbar + ".remote"s);
+	}
+	if ("is_enabled multicommit"_tcli || "is_enabled singlecommit"_tcli) {
+		mbar << add(cascade) -menulabel(mc("Tools")) -submenu(mbar + ".tools"s);
+	}
 
-# -- Repository Menu
-#
-menu .mbar.repository
+	// -- Repository Menu
+	//
+	auto mbarrepo = mbar + ".repository"s;
+	menu(mbarrepo);
 
-if {![is_bare]} {
-	.mbar.repository add command \
-		-label [mc "Explore Working Copy"] \
-		-command {do_explore}
-}
+	if (!"is_bare"_tcli) {
+		mbarrepo << add(command)
+			-menulabel(mc("Explore Working Copy"))
+			-command("do_explore"s);
+	}
 
-if {[is_Windows]} {
-	.mbar.repository add command \
-		-label [mc "Git Bash"] \
-		-command {eval exec [auto_execok start] \
-					  [list "Git Bash" bash --login -l &]}
-}
+	if ("is_Windows"_tcli) {
+		mbarrepo << add(command)
+			-menulabel(mc("Git Bash"))
+			-command("eval exec [auto_execok start] "
+					"[list \"Git Bash\" bash --login -l &]"_tcl);
+	}
 
-if {[is_Windows] || ![is_bare]} {
-	.mbar.repository add separator
-}
+	if ("is_Windows"_tcli || !"is_bare"_tcli) {
+		mbarrepo << add(separator);
+	}
 
-.mbar.repository add command \
-	-label [mc "Browse Current Branch's Files"] \
-	-command {browser::new $current_branch}
-set ui_browse_current [.mbar.repository index last]
-.mbar.repository add command \
-	-label [mc "Browse Branch Files..."] \
-	-command browser_open::dialog
-.mbar.repository add separator
+	mbarrepo << add(command)
+		-menulabel(mc("Browse Current Branch's Files"))
+		-command("browser::new $current_branch"s);
+	"set ui_browse_current [.mbar.repository index last]"_tcl;
+	mbarrepo << add(command)
+		-menulabel(mc("Browse Branch Files..."))
+		-command("browser_open::dialog"s);
+	mbarrepo << add(separator);
 
-.mbar.repository add command \
-	-label [mc "Visualize Current Branch's History"] \
-	-command {do_gitk $current_branch}
-set ui_visualize_current [.mbar.repository index last]
-.mbar.repository add command \
-	-label [mc "Visualize All Branch History"] \
-	-command {do_gitk --all}
-.mbar.repository add separator
+	mbarrepo << add(command)
+		-menulabel(mc("Visualize Current Branch's History"))
+		-command("do_gitk $current_branch"s);
+	"set ui_visualize_current [.mbar.repository index last]"_tcl;
+	mbarrepo << add(command)
+		-menulabel(mc("Visualize All Branch History"))
+		-command("do_gitk --all"s);
+	mbarrepo << add(separator);
 
+	R"tcl(
 proc current_branch_write {args} {
 	global current_branch
 	.mbar.repository entryconf $::ui_browse_current \
@@ -2925,104 +2939,108 @@ proc current_branch_write {args} {
 		-label [mc "Visualize %s's History" $current_branch]
 }
 trace add variable current_branch write current_branch_write
+	)tcl"_tcl;
 
-if {[is_enabled multicommit]} {
-	.mbar.repository add command -label [mc "Database Statistics"] \
-		-command do_stats
+	if ("is_enabled multicommit"_tcli) {
+		mbarrepo << add(command) -menulabel(mc("Database Statistics"))
+			-command("do_stats"s);
 
-	.mbar.repository add command -label [mc "Compress Database"] \
-		-command do_gc
+		mbarrepo << add(command) -menulabel(mc("Compress Database"))
+			-command("do_gc"s);
 
-	.mbar.repository add command -label [mc "Verify Database"] \
-		-command do_fsck_objects
+		mbarrepo << add(command) -menulabel(mc("Verify Database"))
+			-command("do_fsck_objects"s);
 
-	.mbar.repository add separator
+		mbarrepo << add(separator);
 
-	if {[is_Cygwin]} {
-		.mbar.repository add command \
-			-label [mc "Create Desktop Icon"] \
-			-command do_cygwin_shortcut
-	} elseif {[is_Windows]} {
-		.mbar.repository add command \
-			-label [mc "Create Desktop Icon"] \
-			-command do_windows_shortcut
-	} elseif {[is_MacOSX]} {
-		.mbar.repository add command \
-			-label [mc "Create Desktop Icon"] \
-			-command do_macosx_app
+		if ("is_Cygwin"_tcli) {
+			mbarrepo << add(command)
+				-menulabel(mc("Create Desktop Icon"))
+				-command("do_cygwin_shortcut"s);
+		} else if ("is_Windows"_tcli) {
+			mbarrepo << add(command)
+				-menulabel(mc("Create Desktop Icon"))
+				-command("do_windows_shortcut"s);
+		} else if ("is_MacOSX"_tcli) {
+			mbarrepo << add(command)
+				-menulabel(mc("Create Desktop Icon"))
+				-command("do_macosx_app"s);
+		}
 	}
-}
 
-if {[is_MacOSX]} {
-	proc ::tk::mac::Quit {args} { do_quit }
-} else {
-	.mbar.repository add command -label [mc Quit] \
-		-command do_quit \
-		-accelerator $M1T-Q
-}
+	if ("is_MacOSX"_tcli) {
+		"proc ::tk::mac::Quit {args} { do_quit }"_tcl;
+	} else {
+		mbarrepo << add(command) -menulabel(mc("Quit"))
+			-command("do_quit"s)
+			-accelerator(M1T("Q"));
+	}
 
-# -- Edit Menu
-#
-menu .mbar.edit
-.mbar.edit add command -label [mc Undo] \
-	-command {catch {[focus] edit undo}} \
-	-accelerator $M1T-Z
-.mbar.edit add command -label [mc Redo] \
-	-command {catch {[focus] edit redo}} \
-	-accelerator $M1T-Y
-.mbar.edit add separator
-.mbar.edit add command -label [mc Cut] \
-	-command {catch {tk_textCut [focus]}} \
-	-accelerator $M1T-X
-.mbar.edit add command -label [mc Copy] \
-	-command {catch {tk_textCopy [focus]}} \
-	-accelerator $M1T-C
-.mbar.edit add command -label [mc Paste] \
-	-command {catch {tk_textPaste [focus]; [focus] see insert}} \
-	-accelerator $M1T-V
-.mbar.edit add command -label [mc Delete] \
-	-command {catch {[focus] delete sel.first sel.last}} \
-	-accelerator Del
-.mbar.edit add separator
-.mbar.edit add command -label [mc "Select All"] \
-	-command {catch {[focus] tag add sel 0.0 end}} \
-	-accelerator $M1T-A
+	// -- Edit Menu
+	//
+	auto mbaredit = mbar + ".edit"s;
+	menu(mbaredit);
+	mbaredit << add(command) -menulabel(mc("Undo"))
+		-command("catch {[focus] edit undo}")
+		-accelerator(M1T("Z"));
+	mbaredit << add(command) -menulabel(mc("Redo"))
+		-command("catch {[focus] edit redo}")
+		-accelerator(M1T("Y"));
+	mbaredit << add(separator);
+	mbaredit << add(command) -menulabel(mc("Cut"))
+		-command("catch {tk_textCut [focus]}")
+		-accelerator(M1T("X"));
+	mbaredit << add(command) -menulabel(mc("Copy"))
+		-command("catch {tk_textCopy [focus]}")
+		-accelerator(M1T("C"));
+	mbaredit << add(command) -menulabel(mc("Paste"))
+		-command("catch {tk_textPaste [focus]; [focus] see insert}")
+		-accelerator(M1T("V"));
+	mbaredit << add(command) -menulabel(mc("Delete"))
+		-command("catch {[focus] delete sel.first sel.last}")
+		-accelerator("Del");
+	mbaredit << add(separator);
+	mbaredit << add(command) -menulabel(mc("Select All"))
+		-command("catch {[focus] tag add sel 0.0 end}")
+		-accelerator(M1T("A"));
 
-# -- Branch Menu
-#
-if {[is_enabled branch]} {
-	menu .mbar.branch
+	// -- Branch Menu
+	//
+	if ("is_enabled branch"_tcli) {
+		auto mbarbranch = mbar + ".branch"s;
+		menu(mbarbranch);
 
-	.mbar.branch add command -label [mc "Create..."] \
-		-command branch_create::dialog \
-		-accelerator $M1T-N
-	lappend disable_on_lock [list .mbar.branch entryconf \
-		[.mbar.branch index last] -state]
+		mbarbranch << add(command) -menulabel(mc("Create..."))
+			-command("branch_create::dialog"s)
+			-accelerator(M1T("N"));
+		"lappend disable_on_lock [list .mbar.branch entryconf "
+			"[.mbar.branch index last] -state]"_tcl;
 
-	.mbar.branch add command -label [mc "Checkout..."] \
-		-command branch_checkout::dialog \
-		-accelerator $M1T-O
-	lappend disable_on_lock [list .mbar.branch entryconf \
-		[.mbar.branch index last] -state]
+		mbarbranch << add(command) -menulabel(mc("Checkout..."))
+			-command("branch_checkout::dialog"s)
+			-accelerator(M1T("O"));
+		"lappend disable_on_lock [list .mbar.branch entryconf "
+			"[.mbar.branch index last] -state]"_tcl;
 
-	.mbar.branch add command -label [mc "Rename..."] \
-		-command branch_rename::dialog
-	lappend disable_on_lock [list .mbar.branch entryconf \
-		[.mbar.branch index last] -state]
+		mbarbranch << add(command) -menulabel(mc("Rename..."))
+			-command("branch_rename::dialog"s);
+		"lappend disable_on_lock [list .mbar.branch entryconf "
+			"[.mbar.branch index last] -state]"_tcl;
 
-	.mbar.branch add command -label [mc "Delete..."] \
-		-command branch_delete::dialog
-	lappend disable_on_lock [list .mbar.branch entryconf \
-		[.mbar.branch index last] -state]
+		mbarbranch << add(command) -menulabel(mc("Delete..."))
+			-command("branch_delete::dialog"s);
+		"lappend disable_on_lock [list .mbar.branch entryconf "
+			"[.mbar.branch index last] -state]"_tcl;
 
-	.mbar.branch add command -label [mc "Reset..."] \
-		-command merge::reset_hard
-	lappend disable_on_lock [list .mbar.branch entryconf \
-		[.mbar.branch index last] -state]
-}
+		mbarbranch << add(command) -menulabel(mc("Reset..."))
+			-command("merge::reset_hard"s);
+		"lappend disable_on_lock [list .mbar.branch entryconf "
+			"[.mbar.branch index last] -state]"_tcl;
+	}
 
-# -- Commit Menu
-#
+	// -- Commit Menu
+	//
+	R"tcl(
 proc commit_btn_caption {} {
 	if {[is_enabled nocommit]} {
 		return [mc "Done"]
@@ -3030,185 +3048,183 @@ proc commit_btn_caption {} {
 		return [mc Commit@@verb]
 	}
 }
-
-if {[is_enabled multicommit] || [is_enabled singlecommit]} {
-	menu .mbar.commit
-
-	if {![is_enabled nocommit]} {
-		.mbar.commit add radiobutton \
-			-label [mc "New Commit"] \
-			-command do_select_commit_type \
-			-variable selected_commit_type \
-			-value new
-		lappend disable_on_lock \
-			[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-		.mbar.commit add radiobutton \
-			-label [mc "Amend Last Commit"] \
-			-command do_select_commit_type \
-			-variable selected_commit_type \
-			-value amend
-		lappend disable_on_lock \
-			[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-		.mbar.commit add separator
-	}
-
-	.mbar.commit add command -label [mc Rescan] \
-		-command ui_do_rescan \
-		-accelerator F5
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-	.mbar.commit add command -label [mc "Stage To Commit"] \
-		-command do_add_selection \
-		-accelerator $M1T-T
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-	.mbar.commit add command -label [mc "Stage Changed Files To Commit"] \
-		-command do_add_all \
-		-accelerator $M1T-I
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-	.mbar.commit add command -label [mc "Unstage From Commit"] \
-		-command do_unstage_selection \
-		-accelerator $M1T-U
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-	.mbar.commit add command -label [mc "Revert Changes"] \
-		-command do_revert_selection \
-		-accelerator $M1T-J
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-
-	.mbar.commit add separator
-
-	.mbar.commit add command -label [mc "Show Less Context"] \
-		-command show_less_context \
-		-accelerator $M1T-\-
-
-	.mbar.commit add command -label [mc "Show More Context"] \
-		-command show_more_context \
-		-accelerator $M1T-=
-
-	.mbar.commit add separator
-
-	if {![is_enabled nocommitmsg]} {
-		.mbar.commit add command -label [mc "Sign Off"] \
-			-command do_signoff \
-			-accelerator $M1T-S
-	}
-
-	.mbar.commit add command -label [commit_btn_caption] \
-		-command do_commit \
-		-accelerator $M1T-Return
-	lappend disable_on_lock \
-		[list .mbar.commit entryconf [.mbar.commit index last] -state]
-}
-
-# -- Merge Menu
-#
-if {[is_enabled branch]} {
-	menu .mbar.merge
-	.mbar.merge add command -label [mc "Local Merge..."] \
-		-command merge::dialog \
-		-accelerator $M1T-M
-	lappend disable_on_lock \
-		[list .mbar.merge entryconf [.mbar.merge index last] -state]
-	.mbar.merge add command -label [mc "Abort Merge..."] \
-		-command merge::reset_hard
-	lappend disable_on_lock \
-		[list .mbar.merge entryconf [.mbar.merge index last] -state]
-}
-
-# -- Transport Menu
-#
-if {[is_enabled transport]} {
-	menu .mbar.remote
-
-	.mbar.remote add command \
-		-label [mc "Add..."] \
-		-command remote_add::dialog \
-		-accelerator $M1T-A
-	.mbar.remote add command \
-		-label [mc "Push..."] \
-		-command do_push_anywhere \
-		-accelerator $M1T-P
-	.mbar.remote add command \
-		-label [mc "Delete Branch..."] \
-		-command remote_branch_delete::dialog
-}
-
-if {[is_MacOSX]} {
-	proc ::tk::mac::ShowPreferences {} {do_options}
-} else {
-	# -- Edit Menu
-	#
-	.mbar.edit add separator
-	.mbar.edit add command -label [mc "Options..."] \
-		-command do_options
-}
-
-# -- Tools Menu
-#
-if {[is_enabled multicommit] || [is_enabled singlecommit]} {
-	set tools_menubar .mbar.tools
-	menu $tools_menubar
-	$tools_menubar add separator
-	$tools_menubar add command -label [mc "Add..."] -command tools_add::dialog
-	$tools_menubar add command -label [mc "Remove..."] -command tools_remove::dialog
-	set tools_tailcnt 3
-	if {[array names repo_config guitool.*.cmd] ne {}} {
-		tools_populate_all
-	}
-}
-
-# -- Help Menu
-#
-.mbar add cascade -label [mc Help] -menu .mbar.help
-menu .mbar.help
 	)tcl"_tcl;
+
+	if ("is_enabled multicommit"_tcli || "is_enabled singlecommit"_tcli) {
+		auto mbarcommit = mbar + ".commit"s;
+		menu(mbarcommit);
+
+		if (!"is_enabled nocommit"_tcli) {
+			mbarcommit << add(radiobutton)
+				-menulabel(mc("New Commit"))
+				-command("do_select_commit_type"s)
+				-variable("selected_commit_type"s)
+				-value("new"s);
+			"lappend disable_on_lock "
+				"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+			mbarcommit << add(radiobutton)
+				-menulabel(mc("Amend Last Commit"))
+				-command("do_select_commit_type"s)
+				-variable("selected_commit_type"s)
+				-value("amend"s);
+			"lappend disable_on_lock "
+				"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+			mbarcommit << add(separator);
+		}
+
+		mbarcommit << add(command) -menulabel(mc("Rescan"))
+			-command("ui_do_rescan"s)
+			-accelerator("F5"s);
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+		mbarcommit << add(command) -menulabel(mc("Stage To Commit"))
+			-command("do_add_selection"s)
+			-accelerator(M1T("T"));
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+		mbarcommit << add(command) -menulabel(mc("Stage Changed Files To Commit"))
+			-command("do_add_all")
+			-accelerator(M1T("I"));
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+		mbarcommit << add(command) -menulabel(mc("Unstage From Commit"))
+			-command("do_unstage_selection"s)
+			-accelerator(M1T("U"));
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+		mbarcommit << add(command) -menulabel(mc("Revert Changes"))
+			-command("do_revert_selection"s)
+			-accelerator(M1T("J"));
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+
+		mbarcommit << add(separator);
+
+		mbarcommit << add(command) -menulabel(mc("Show Less Context"))
+			-command("show_less_context"s)
+			-accelerator(M1T("-"));
+
+		mbarcommit << add(command) -menulabel(mc("Show More Context"))
+			-command("show_more_context"s)
+			-accelerator(M1T("="));
+
+		mbarcommit << add(separator);
+
+		if (!"is_enabled nocommitmsg"_tcli) {
+			mbarcommit << add(command) -menulabel(mc("Sign Off"))
+				-command("do_signoff"s)
+				-accelerator(M1T("S"));
+		}
+
+		mbarcommit << add(command) -menulabel("commit_btn_caption"_tcls)
+			-command("do_commit"s)
+			-accelerator(M1T("Return"));
+		"lappend disable_on_lock "
+			"[list .mbar.commit entryconf [.mbar.commit index last] -state]"_tcl;
+	}
+
+	// -- Merge Menu
+	//
+	if ("is_enabled branch"_tcli) {
+		auto mbarmerge = mbar + ".merge"s;
+		menu(mbarmerge);
+		mbarmerge << add(command) -menulabel(mc("Local Merge..."))
+			-command("merge::dialog"s)
+			-accelerator(M1T("M"));
+		"lappend disable_on_lock "
+			"[list .mbar.merge entryconf [.mbar.merge index last] -state]"_tcl;
+		mbarmerge << add(command) -menulabel(mc("Abort Merge..."))
+			-command("merge::reset_hard");
+		"lappend disable_on_lock "
+			"[list .mbar.merge entryconf [.mbar.merge index last] -state]"_tcl;
+	}
+
+	// -- Transport Menu
+	//
+	if ("is_enabled transport"_tcli) {
+		auto mbarremote = mbar + ".remote"s;
+		menu(mbarremote);
+
+		mbarremote << add(command)
+			-menulabel(mc("Add..."))
+			-command("remote_add::dialog"s)
+			-accelerator(M1T("A"));
+		mbarremote << add(command)
+			-menulabel(mc("Push..."))
+			-command("do_push_anywhere"s)
+			-accelerator(M1T("P"));
+		mbarremote << add(command)
+			-menulabel(mc("Delete Branch..."))
+			-command("remote_branch_delete::dialog"s);
+	}
+
+	if ("is_MacOSX"_tcli) {
+		"proc ::tk::mac::ShowPreferences {} {do_options}"_tcl;
+	} else {
+		// -- Edit Menu
+		//
+		mbaredit << add(separator);
+		mbaredit << add(command) -menulabel(mc("Options..."))
+			-command("do_options"s);
+	}
+
+	// -- Tools Menu
+	//
+	if ("is_enabled multicommit"_tcli || "is_enabled singlecommit"_tcli) {
+		"set tools_menubar .mbar.tools"_tcl;
+		tools_menubar = mbar + ".tools"s;
+		menu(tools_menubar);
+		tools_menubar << add(separator);
+		tools_menubar << add(command) -menulabel(mc("Add...")) -command("tools_add::dialog"s);
+		tools_menubar << add(command) -menulabel(mc("Remove...")) -command("tools_remove::dialog"s);
+		R"tcl(
+		set tools_tailcnt 3
+		if {[array names repo_config guitool.*.cmd] ne {}} {
+			tools_populate_all
+		}
+		)tcl"_tcl;
+	}
+
+	// -- Help Menu
+	//
+	auto mbarhelp = mbar + ".help"s;
+	mbar << add(cascade) -menulabel(mc("Help")) -submenu(mbarhelp);
+	menu(mbarhelp);
 	if ("is_MacOSX"_tcli) {
 		".mbar.apple" << add(command) -menulabel(mc("About %s", appname))
 			-command(do_about);
 		".mbar.apple" << add(separator);
 	} else {
-		".mbar.help" << add(command) -menulabel(mc("About %s", appname))
+		mbarhelp << add(command) -menulabel(mc("About %s", appname))
 			-command(do_about);
 	}
-	R"tcl(
-. configure -menu .mbar
+	"."s << configure() -submenu(mbar);
 
-set doc_path [githtmldir]
-if {$doc_path ne {}} {
-	set doc_path [file join $doc_path index.html]
-
-	if {[is_Cygwin]} {
-		set doc_path [exec cygpath --mixed $doc_path]
+	fs::path doc_path = "githtmldir"_tcls;
+	if (!doc_path.empty()) {
+		doc_path /= "index.html"s;
 	}
-}
 
-if {[file isfile $doc_path]} {
-	set doc_url "file:$doc_path"
-} else {
-	set doc_url {http://www.kernel.org/pub/software/scm/git/docs/}
-}
+	std::string doc_url;
+	if (fs::is_regular_file(doc_path)) {
+		doc_url = "file:" + doc_path.generic_string();
+	} else {
+		doc_url = "http://www.kernel.org/pub/software/scm/git/docs/";
+	}
 
-proc start_browser {url} {
-	git "web--browse" $url
-}
+	mbarhelp << add(command) -menulabel(mc("Online Documentation"))
+		-command([=]() { eval("git \"web--browse\" " + doc_url); });
 
-.mbar.help add command -label [mc "Online Documentation"] \
-	-command [list start_browser $doc_url]
+	mbarhelp << add(command) -menulabel(mc("Show SSH Key"))
+		-command("do_ssh_key"s);
 
-.mbar.help add command -label [mc "Show SSH Key"] \
-	-command do_ssh_key
-
-unset doc_path doc_url
-
+	R"tcl(
 # -- Standard bindings
 #
 wm protocol . WM_DELETE_WINDOW do_quit
