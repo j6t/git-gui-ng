@@ -31,6 +31,22 @@ void GitGui::error_popup(const std::string& msg)
 		-(setparent ? parent(parentw) : ""_tcl);
 }
 
+std::string GitGui::ask_popup(const std::string& msg)
+{
+	auto t = appname;
+	if (!repo.name().empty())
+		t += " (" + repo.name() + ")";
+	auto parentw = error_parent();
+	int setparent = winfo(ismapped, parentw);
+	return
+		std::string(tk_messageBox()
+			-icon(question)
+			-messagetype(yesno)
+			-title(t)
+			-messagetext(msg)
+			-(setparent ? parent(parentw) : ""_tcl));
+}
+
 std::string lib_error = R"tcl(
 proc _error_parent {} {
 	set p [grab current .]

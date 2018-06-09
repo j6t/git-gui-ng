@@ -28,6 +28,7 @@ private:
 			std::vector<std::string>& argv);
 
 	void error_popup(const std::string& msg);
+	std::string ask_popup(const std::string& msg);
 
 	std::string M1T(std::string key) const;
 
