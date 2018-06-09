@@ -22,7 +22,6 @@
 #include "lib/class.h"
 #include "lib/commit.h"
 #include "lib/console.h"
-#include "lib/database.h"
 #include "lib/date.h"
 #include "lib/diff.h"
 #include "lib/encoding.h"
@@ -1377,7 +1376,6 @@ You are using [git-version]:
 	eval(lib_choose_rev);
 	eval(lib_commit);
 	eval(lib_console);
-	eval(lib_database);
 	eval(lib_date);
 	eval(lib_diff);
 	eval(lib_encoding);
@@ -2943,13 +2941,13 @@ trace add variable current_branch write current_branch_write
 
 	if ("is_enabled multicommit"_tcli) {
 		mbarrepo << add(command) -menulabel(mc("Database Statistics"))
-			-command("do_stats"s);
+			-command([&]() { do_stats(); });
 
 		mbarrepo << add(command) -menulabel(mc("Compress Database"))
-			-command("do_gc"s);
+			-command([&]() { do_gc(); });
 
 		mbarrepo << add(command) -menulabel(mc("Verify Database"))
-			-command("do_fsck_objects"s);
+			-command([&]() { do_fsck_objects(); });
 
 		mbarrepo << add(separator);
 
@@ -4104,9 +4102,11 @@ after 1 {
 		$ui_comm configure -state disabled -background gray
 	}
 }
-if {[is_enabled multicommit] && ![is_config_false gui.gcwarning]} {
-	after 1000 hint_gc
-}
+	)tcl"_tcl;
+	if ("is_enabled multicommit"_tcli && !"is_config_false gui.gcwarning"_tcli) {
+		after(1000, [&]() { hint_gc(); });
+	}
+	R"tcl(
 if {[is_enabled retcode]} {
 	bind . <Destroy> {+terminate_me %W}
 }

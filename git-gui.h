@@ -32,7 +32,14 @@ private:
 
 	std::string M1T(std::string key) const;
 
+	// about
 	static void do_about();
+
+	// database
+	void do_stats();
+	void do_gc();
+	void do_fsck_objects();
+	void hint_gc();
 
 	Repo repo;
 	std::string m1t_pfx;
