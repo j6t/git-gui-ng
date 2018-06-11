@@ -31,6 +31,7 @@ private:
 	std::string ask_popup(const std::string& msg);
 
 	std::string M1T(std::string key) const;
+	std::string M1B(std::string key) const;
 
 	// about
 	static void do_about();
@@ -43,6 +44,7 @@ private:
 
 	Repo repo;
 	std::string m1t_pfx;
+	std::string m1b_pfx;
 	std::string tools_menubar;
 
 	static const std::string appname;

@@ -390,6 +390,11 @@ std::string GitGui::M1T(std::string key) const
 	return m1t_pfx + std::move(key);
 }
 
+std::string GitGui::M1B(std::string key) const
+{
+	return m1b_pfx + "Key-"s + std::move(key) + ">";
+}
+
 int GitGui::main(const char* argv0, std::vector<std::string> argv)
 {
 	Tk::init(argv0);
@@ -1135,6 +1140,7 @@ if {[is_MacOSX]} {
 	)tcl"_tcl;
 
 	m1t_pfx = "expr {$M1T}"_tcls + '-';
+	m1b_pfx = "<" + "expr {$M1B}"_tcls + '-';
 
 	R"tcl(
 proc bind_button3 {w cmd} {
@@ -3222,15 +3228,13 @@ proc commit_btn_caption {} {
 	mbarhelp << add(command) -menulabel(mc("Show SSH Key"))
 		-command("do_ssh_key"s);
 
-	R"tcl(
-# -- Standard bindings
-#
-wm protocol . WM_DELETE_WINDOW do_quit
-bind all <$M1B-Key-q> do_quit
-bind all <$M1B-Key-Q> do_quit
-bind all <$M1B-Key-w> {destroy [winfo toplevel %W]}
-bind all <$M1B-Key-W> {destroy [winfo toplevel %W]}
-	)tcl"_tcl;
+	// -- Standard bindings
+	//
+	wmprotocol("."s, "WM_DELETE_WINDOW"s, "do_quit"s);
+	bind("all"s, M1B("q"), "do_quit"s);
+	bind("all"s, M1B("Q"), "do_quit"s);
+	bind("all"s, M1B("w"), [](const std::string& W) { destroy(winfo(toplevel, W)); }, event_W);
+	bind("all"s, M1B("W"), [](const std::string& W) { destroy(winfo(toplevel, W)); }, event_W);
 
 	if (int done = do_subcommand(subcommand, argv0, argv))
 		return done-1;
@@ -3891,40 +3895,42 @@ bind $ui_diff <Key-l>         {catch {%W xview scroll  1 units};break}
 bind $ui_diff <Control-Key-b> {catch {%W yview scroll -1 pages};break}
 bind $ui_diff <Control-Key-f> {catch {%W yview scroll  1 pages};break}
 bind $ui_diff <Button-1>   {focus %W}
+	)tcl"_tcl;
 
-if {[is_enabled branch]} {
-	bind . <$M1B-Key-n> branch_create::dialog
-	bind . <$M1B-Key-N> branch_create::dialog
-	bind . <$M1B-Key-o> branch_checkout::dialog
-	bind . <$M1B-Key-O> branch_checkout::dialog
-	bind . <$M1B-Key-m> merge::dialog
-	bind . <$M1B-Key-M> merge::dialog
-}
-if {[is_enabled transport]} {
-	bind . <$M1B-Key-p> do_push_anywhere
-	bind . <$M1B-Key-P> do_push_anywhere
-}
+	if ("is_enabled branch"_tcli) {
+		bind("."s, M1B("n"), "branch_create::dialog"s);
+		bind("."s, M1B("N"), "branch_create::dialog"s);
+		bind("."s, M1B("o"), "branch_checkout::dialog"s);
+		bind("."s, M1B("O"), "branch_checkout::dialog"s);
+		bind("."s, M1B("m"), "merge::dialog"s);
+		bind("."s, M1B("M"), "merge::dialog"s);
+	}
+	if ("is_enabled transport"_tcli) {
+		bind("."s, M1B("p"), "do_push_anywhere"s);
+		bind("."s, M1B("P"), "do_push_anywhere"s);
+	}
 
-bind .   <Key-F5>     ui_do_rescan
-bind .   <$M1B-Key-r> ui_do_rescan
-bind .   <$M1B-Key-R> ui_do_rescan
-bind .   <$M1B-Key-s> do_signoff
-bind .   <$M1B-Key-S> do_signoff
-bind .   <$M1B-Key-t> { toggle_or_diff toggle %W }
-bind .   <$M1B-Key-T> { toggle_or_diff toggle %W }
-bind .   <$M1B-Key-u> { toggle_or_diff toggle %W }
-bind .   <$M1B-Key-U> { toggle_or_diff toggle %W }
-bind .   <$M1B-Key-j> do_revert_selection
-bind .   <$M1B-Key-J> do_revert_selection
-bind .   <$M1B-Key-i> do_add_all
-bind .   <$M1B-Key-I> do_add_all
-bind .   <$M1B-Key-minus> {show_less_context;break}
-bind .   <$M1B-Key-KP_Subtract> {show_less_context;break}
-bind .   <$M1B-Key-equal> {show_more_context;break}
-bind .   <$M1B-Key-plus> {show_more_context;break}
-bind .   <$M1B-Key-KP_Add> {show_more_context;break}
-bind .   <$M1B-Key-Return> do_commit
-bind .   <$M1B-Key-KP_Enter> do_commit
+	bind("."s, "<Key-F5>"s, "ui_do_rescan"s);
+	bind("."s, M1B("r"), "ui_do_rescan"s);
+	bind("."s, M1B("R"), "ui_do_rescan"s);
+	bind("."s, M1B("s"), "do_signoff"s);
+	bind("."s, M1B("S"), "do_signoff"s);
+	bind("."s, M1B("t"), "toggle_or_diff toggle %W"s);
+	bind("."s, M1B("T"), "toggle_or_diff toggle %W"s);
+	bind("."s, M1B("u"), "toggle_or_diff toggle %W"s);
+	bind("."s, M1B("U"), "toggle_or_diff toggle %W"s);
+	bind("."s, M1B("j"), "do_revert_selection"s);
+	bind("."s, M1B("J"), "do_revert_selection"s);
+	bind("."s, M1B("i"), "do_add_all"s);
+	bind("."s, M1B("I"), "do_add_all"s);
+	bind("."s, M1B("minus"), "show_less_context;break"s);
+	bind("."s, M1B("KP_Subtract"), "show_less_context;break"s);
+	bind("."s, M1B("equal"), "show_more_context;break"s);
+	bind("."s, M1B("plus"), "show_more_context;break"s);
+	bind("."s, M1B("KP_Add"), "show_more_context;break"s);
+	bind("."s, M1B("Return"), "do_commit"s);
+	bind("."s, M1B("KP_Enter"), "do_commit"s);
+	R"tcl(
 foreach i [list $ui_index $ui_workdir] {
 	bind $i <Button-1>       { toggle_or_diff click %W %x %y; break }
 	bind $i <$M1B-Button-1>  { add_one_to_selection %W %x %y; break }
