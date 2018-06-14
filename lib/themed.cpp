@@ -3,6 +3,9 @@
 
 #include "themed.h"
 
+using namespace Tk;
+using namespace std::literals;
+
 std::string lib_themed = R"tcl(
 proc ttk_get_current_theme {} {
 	# Handle either current Tk or older versions of 8.5
@@ -83,57 +86,6 @@ proc InitTheme {} {
 
 	if {[lsearch [bind . <<ThemeChanged>>] InitTheme] == -1} {
 		bind . <<ThemeChanged>> +[namespace code [list InitTheme]]
-	}
-}
-
-# Define a style used for the surround of text widgets.
-proc InitEntryFrame {} {
-	ttk::style theme settings default {
-		ttk::style layout EntryFrame {
-			EntryFrame.field -sticky nswe -border 0 -children {
-				EntryFrame.fill -sticky nswe -children {
-					EntryFrame.padding -sticky nswe
-				}
-			}
-		}
-		ttk::style configure EntryFrame -padding 1 -relief sunken
-		ttk::style map EntryFrame -background {}
-	}
-	ttk::style theme settings classic {
-		ttk::style configure EntryFrame -padding 2 -relief sunken
-		ttk::style map EntryFrame -background {}
-	}
-	ttk::style theme settings alt {
-		ttk::style configure EntryFrame -padding 2
-		ttk::style map EntryFrame -background {}
-	}
-	ttk::style theme settings clam {
-		ttk::style configure EntryFrame -padding 2
-		ttk::style map EntryFrame -background {}
-	}
-
-	# Ignore errors for missing native themes
-	catch {
-		ttk::style theme settings winnative {
-			ttk::style configure EntryFrame -padding 2
-		}
-		ttk::style theme settings xpnative {
-			ttk::style configure EntryFrame -padding 1
-			ttk::style element create EntryFrame.field vsapi \
-				EDIT 1 {disabled 4 focus 3 active 2 {} 1} -padding 1
-		}
-		ttk::style theme settings vista {
-			ttk::style configure EntryFrame -padding 2
-			ttk::style element create EntryFrame.field vsapi \
-				EDIT 6 {disabled 4 focus 3 active 2 {} 1} -padding 2
-		}
-	}
-
-	bind EntryFrame <Enter> {%W instate !disabled {%W state active}}
-	bind EntryFrame <Leave> {%W state !active}
-	bind EntryFrame <<ThemeChanged>> {
-		set pad [ttk::style lookup EntryFrame -padding]
-		%W configure -padding [expr {$pad eq {} ? 1 : $pad}]
 	}
 }
 
@@ -342,3 +294,97 @@ proc on_choosefont {familyvar sizevar font} {
 # tab-width: 4
 # End:
 )tcl";
+
+// Define a style used for the surround of text widgets.
+static void InitEntryFrame()
+{
+	R"tcl(
+	ttk::style theme settings default {
+		ttk::style layout EntryFrame {
+			EntryFrame.field -sticky nswe -border 0 -children {
+				EntryFrame.fill -sticky nswe -children {
+					EntryFrame.padding -sticky nswe
+				}
+			}
+		}
+		ttk::style configure EntryFrame -padding 1 -relief sunken
+		ttk::style map EntryFrame -background {}
+	}
+	ttk::style theme settings classic {
+		ttk::style configure EntryFrame -padding 2 -relief sunken
+		ttk::style map EntryFrame -background {}
+	}
+	ttk::style theme settings alt {
+		ttk::style configure EntryFrame -padding 2
+		ttk::style map EntryFrame -background {}
+	}
+	ttk::style theme settings clam {
+		ttk::style configure EntryFrame -padding 2
+		ttk::style map EntryFrame -background {}
+	}
+
+	# Ignore errors for missing native themes
+	catch {
+		ttk::style theme settings winnative {
+			ttk::style configure EntryFrame -padding 2
+		}
+		ttk::style theme settings xpnative {
+			ttk::style configure EntryFrame -padding 1
+			ttk::style element create EntryFrame.field vsapi \
+				EDIT 1 {disabled 4 focus 3 active 2 {} 1} -padding 1
+		}
+		ttk::style theme settings vista {
+			ttk::style configure EntryFrame -padding 2
+			ttk::style element create EntryFrame.field vsapi \
+				EDIT 6 {disabled 4 focus 3 active 2 {} 1} -padding 2
+		}
+	}
+
+	bind EntryFrame <Enter> {%W instate !disabled {%W state active}}
+	bind EntryFrame <Leave> {%W state !active}
+	bind EntryFrame <<ThemeChanged>> {
+		set pad [ttk::style lookup EntryFrame -padding]
+		%W configure -padding [expr {$pad eq {} ? 1 : $pad}]
+	}
+	)tcl"_tcl;
+}
+
+decltype(label({})) tlabel(const std::string& w)
+{
+	if (useTtk()) {
+		return label(w) -style("Color.TLabel"s);
+	} else {
+		return label(w);
+	}
+}
+
+// Create a text widget with any theme specific properties.
+decltype(text({})) ttext(std::string w)
+{
+	w = std::string(textw(w));
+	if (useTtk()) {
+		auto theme = "ttk_get_current_theme"_tcls;
+		if (theme == "vista" || theme == "xpnative")
+			w << configure() -highlightthickness(0) -borderwidth(0);
+		if (std::string(winfo(wndclass, winfo(parent, w))) == "EntryFrame") {
+			bind(w, "<FocusIn>"s,
+				[](const std::string& W) { winfo(parent, W) << "state focus"_tcl; }, event_W);
+			bind(w, "<FocusOut>"s,
+				[](const std::string& W) { winfo(parent, W) << "state !focus"_tcl; }, event_W);
+		}
+	}
+	return w << configure();
+}
+
+// themed frame suitable for surrounding a text field.
+decltype(frame({})) textframe(const std::string& w)
+{
+	if (useTtk()) {
+		if ("catch {ttk::style layout EntryFrame}"_tcli) {
+			InitEntryFrame();
+		}
+		return frame(w) -wndclass("EntryFrame"s) -style("EntryFrame"s);
+	} else {
+		return frame(w);
+	}
+}

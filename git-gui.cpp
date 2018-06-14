@@ -2268,8 +2268,10 @@ static unsigned char file_statechange_bits[] = {
    0x02, 0x10, 0x02, 0x10, 0xfe, 0x1f};
 } -maskdata $filemask
 
-set ui_index .vpane.files.index.list
-set ui_workdir .vpane.files.workdir.list
+	)tcl"_tcl;
+	eval("set ui_index " + ui_index);
+	eval("set ui_workdir " +  ui_workdir);
+	R"tcl(
 
 set all_icons(_$ui_index)   file_plain
 set all_icons(A$ui_index)   file_plain
@@ -3244,118 +3246,108 @@ proc commit_btn_caption {} {
 	if (int done = do_subcommand(subcommand, argv0, argv))
 		return done-1;
 
-	R"tcl(
-# -- Branch Control
-#
-${NS}::frame .branch
-if {!$use_ttk} {.branch configure -borderwidth 1 -relief sunken}
-${NS}::label .branch.l1 \
-	-text [mc "Current Branch:"] \
-	-anchor w \
-	-justify left
-${NS}::label .branch.cb \
-	-textvariable current_branch \
-	-anchor w \
-	-justify left
-pack .branch.l1 -side left
-pack .branch.cb -side left -fill x
-pack .branch -side top -fill x
+	// -- Branch Control
+	//
+	frame(".branch"s);
+	if (!useTtk())
+		".branch"s << configure() -borderwidth(1) -relief("sunken"s);
+	label(".branch.l1"s)
+		-text(mc("Current Branch:"))
+		-anchor(w)
+		-justify(left);
+	label(".branch.cb"s)
+		-textvariable("current_branch"s)
+		-anchor(w)
+		-justify(left);
+	pack(".branch.l1"s) -side(left);
+	pack(".branch.cb"s) -side(left) -fill(x);
+	pack(".branch"s) -side(top) -fill(x);
 
-# -- Main Window Layout
-#
-${NS}::panedwindow .vpane -orient horizontal
-${NS}::panedwindow .vpane.files -orient vertical
-if {$use_ttk} {
-	.vpane add .vpane.files
-} else {
-	.vpane add .vpane.files -sticky nsew -height 100 -width 200
-}
-pack .vpane -anchor n -side top -fill both -expand 1
-
-# -- Working Directory File List
-
-textframe .vpane.files.workdir -height 100 -width 200
-tlabel .vpane.files.workdir.title -text [mc "Unstaged Changes"] \
-	-background lightsalmon -foreground black
-ttext $ui_workdir -background white -foreground black \
-	-borderwidth 0 \
-	-width 20 -height 10 \
-	-wrap none \
-	-takefocus 1 -highlightthickness 1\
-	-cursor $cursor_ptr \
-	-xscrollcommand {.vpane.files.workdir.sx set} \
-	-yscrollcommand {.vpane.files.workdir.sy set} \
-	-state disabled
-${NS}::scrollbar .vpane.files.workdir.sx -orient h -command [list $ui_workdir xview]
-${NS}::scrollbar .vpane.files.workdir.sy -orient v -command [list $ui_workdir yview]
-pack .vpane.files.workdir.title -side top -fill x
-pack .vpane.files.workdir.sx -side bottom -fill x
-pack .vpane.files.workdir.sy -side right -fill y
-pack $ui_workdir -side left -fill both -expand 1
-
-# -- Index File List
-#
-textframe .vpane.files.index -height 100 -width 200
-tlabel .vpane.files.index.title \
-	-text [mc "Staged Changes (Will Commit)"] \
-	-background lightgreen -foreground black
-ttext $ui_index -background white -foreground black \
-	-borderwidth 0 \
-	-width 20 -height 10 \
-	-wrap none \
-	-takefocus 1 -highlightthickness 1\
-	-cursor $cursor_ptr \
-	-xscrollcommand {.vpane.files.index.sx set} \
-	-yscrollcommand {.vpane.files.index.sy set} \
-	-state disabled
-${NS}::scrollbar .vpane.files.index.sx -orient h -command [list $ui_index xview]
-${NS}::scrollbar .vpane.files.index.sy -orient v -command [list $ui_index yview]
-pack .vpane.files.index.title -side top -fill x
-pack .vpane.files.index.sx -side bottom -fill x
-pack .vpane.files.index.sy -side right -fill y
-pack $ui_index -side left -fill both -expand 1
-
-# -- Insert the workdir and index into the panes
-#
-.vpane.files add .vpane.files.workdir
-.vpane.files add .vpane.files.index
-if {!$use_ttk} {
-	.vpane.files paneconfigure .vpane.files.workdir -sticky news
-	.vpane.files paneconfigure .vpane.files.index -sticky news
-}
-
-foreach i [list $ui_index $ui_workdir] {
-	rmsel_tag $i
-	$i tag conf in_diff -background [$i tag cget in_sel -background]
-}
-unset i
-
-# -- Diff and Commit Area
-#
-if {$have_tk85} {
-	${NS}::panedwindow .vpane.lower -orient vertical
-	${NS}::frame .vpane.lower.commarea
-	${NS}::frame .vpane.lower.diff -relief sunken -borderwidth 1 -height 500
-	.vpane.lower add .vpane.lower.diff
-	.vpane.lower add .vpane.lower.commarea
-	.vpane add .vpane.lower
-	if {$use_ttk} {
-		.vpane.lower pane .vpane.lower.diff -weight 1
-		.vpane.lower pane .vpane.lower.commarea -weight 0
+	// -- Main Window Layout
+	//
+	panedwindow(".vpane"s) -orient(horizontal);
+	panedwindow(".vpane.files"s) -orient(vertical);
+	if (useTtk()) {
+		".vpane"s << add(".vpane.files"s);
 	} else {
-		.vpane.lower paneconfigure .vpane.lower.diff -stretch always
-		.vpane.lower paneconfigure .vpane.lower.commarea -stretch never
+		".vpane"s << add(".vpane.files"s) -sticky("nsew"s) -height(100) -width(200);
 	}
-} else {
-	frame .vpane.lower -height 300 -width 400
-	frame .vpane.lower.commarea
-	frame .vpane.lower.diff -relief sunken -borderwidth 1
-	pack .vpane.lower.diff -fill both -expand 1
-	pack .vpane.lower.commarea -side bottom -fill x
-	.vpane add .vpane.lower
-	.vpane paneconfigure .vpane.lower -sticky nsew
-}
+	pack(".vpane"s) -anchor(n) -side(top) -fill(both) -expand(1);
 
+	// -- Working Directory File List
+	//
+	textframe(".vpane.files.workdir"s) -height(100) -width(200);
+	tlabel(".vpane.files.workdir.title"s) -text(mc("Unstaged Changes"))
+		-background("lightsalmon"s) -foreground("black"s);
+	ttext(ui_workdir) -background("white"s) -foreground("black"s)
+		-borderwidth(0)
+		-width(20) -height(10)
+		-wrap("none"s)
+		-takefocus(1) -highlightthickness(1)
+		-cursor(cursor_ptr)
+		-xscrollcommand(".vpane.files.workdir.sx set"s)
+		-yscrollcommand(".vpane.files.workdir.sy set"s)
+		-state(disabled);
+	scrollbar(".vpane.files.workdir.sx"s) -orient(horizontal) -command([&]() { ui_workdir << xview(); });
+	scrollbar(".vpane.files.workdir.sy"s) -orient(vertical) -command([&]() { ui_workdir << yview(); });
+	pack(".vpane.files.workdir.title"s) -side(top) -fill(Tk::x);
+	pack(".vpane.files.workdir.sx"s) -side(bottom) -fill(Tk::x);
+	pack(".vpane.files.workdir.sy"s) -side(right) -fill(Tk::y);
+	pack(ui_workdir) -side(left) -fill(both) -expand(1);
+
+	// -- Index File List
+	//
+	textframe(".vpane.files.index"s) -height(100) -width(200);
+	tlabel(".vpane.files.index.title"s)
+		-text(mc("Staged Changes (Will Commit)"))
+		-background("lightgreen"s) -foreground("black"s);
+	ttext(ui_index) -background("white"s) -foreground("black"s)
+		-borderwidth(0)
+		-width(20) -height(10)
+		-wrap(none)
+		-takefocus(1) -highlightthickness(1)
+		-cursor(cursor_ptr)
+		-xscrollcommand(".vpane.files.index.sx set"s)
+		-yscrollcommand(".vpane.files.index.sy set"s)
+		-state(disabled);
+	scrollbar(".vpane.files.index.sx"s) -orient(horizontal) -command([&]() { ui_index << xview(); });
+	scrollbar(".vpane.files.index.sy"s) -orient(vertical) -command([&]() { ui_index << yview(); });
+	pack(".vpane.files.index.title"s) -side(top) -fill(Tk::x);
+	pack(".vpane.files.index.sx"s) -side(bottom) -fill(Tk::x);
+	pack(".vpane.files.index.sy"s) -side(right) -fill(Tk::y);
+	pack(ui_index) -side(left) -fill(both) -expand(1);
+
+	// -- Insert the workdir and index into the panes
+	//
+	".vpane.files"s << add(".vpane.files.workdir"s);
+	".vpane.files"s << add(".vpane.files.index"s);
+	if (!useTtk()) {
+		".vpane.files"s << paneconfigure(".vpane.files.workdir") -sticky("news"s);
+		".vpane.files"s << paneconfigure(".vpane.files.index") -sticky("news"s);
+	}
+
+	for (const auto& i: { ui_index, ui_workdir }) {
+		eval("rmsel_tag "s + i);
+		i << tag(configure, "in_diff"s) -background(std::string(i << tag(cget, "in_sel"s, background)));
+	}
+
+	// -- Diff and Commit Area
+	//
+	panedwindow(".vpane.lower"s) -orient(vertical);
+	frame(".vpane.lower.commarea"s);
+	frame(".vpane.lower.diff"s) -relief(sunken) -borderwidth(1) -height(500);
+	".vpane.lower"s << add(".vpane.lower.diff"s);
+	".vpane.lower"s << add(".vpane.lower.commarea"s);
+	".vpane"s << add(".vpane.lower"s);
+	if (useTtk()) {
+		".vpane.lower pane .vpane.lower.diff"_tcl -weight(1);
+		".vpane.lower pane .vpane.lower.commarea"_tcl -weight(0);
+	} else {
+		".vpane.lower"s << paneconfigure(".vpane.lower.diff"s) -stretch("always"s);
+		".vpane.lower"s << paneconfigure(".vpane.lower.commarea"s) -stretch("never"s);
+	}
+
+	R"tcl(
 # -- Commit Area Buttons
 #
 ${NS}::frame .vpane.lower.commarea.buttons
@@ -3935,16 +3927,15 @@ bind $ui_diff <Button-1>   {focus %W}
 	bind("."s, M1B("KP_Add"), "show_more_context;break"s);
 	bind("."s, M1B("Return"), "do_commit"s);
 	bind("."s, M1B("KP_Enter"), "do_commit"s);
-	R"tcl(
-foreach i [list $ui_index $ui_workdir] {
-	bind $i <Button-1>       { toggle_or_diff click %W %x %y; break }
-	bind $i <$M1B-Button-1>  { add_one_to_selection %W %x %y; break }
-	bind $i <Shift-Button-1> { add_range_to_selection %W %x %y; break }
-	bind $i <Key-Up>         { toggle_or_diff up %W; break }
-	bind $i <Key-Down>       { toggle_or_diff down %W; break }
-}
-unset i
+	for (const auto& i: { ui_index, ui_workdir }) {
+		bind(i, "<Button-1>"s,          "toggle_or_diff click %W %x %y; break"s);
+		bind(i, m1b_pfx + "Button-1>"s, "add_one_to_selection %W %x %y; break"s);
+		bind(i, "<Shift-Button-1>"s,    "add_range_to_selection %W %x %y; break"s);
+		bind(i, "<Key-Up>"s,            "toggle_or_diff up %W; break"s);
+		bind(i, "<Key-Down>"s,          "toggle_or_diff down %W; break"s);
+	}
 
+	R"tcl(
 set file_lists($ui_index) [list]
 set file_lists($ui_workdir) [list]
 

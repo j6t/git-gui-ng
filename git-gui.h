@@ -44,9 +44,12 @@ private:
 	void hint_gc();
 
 	Repo repo;
+	std::string ui_index = ".vpane.files.index.list";
+	std::string ui_workdir = ".vpane.files.workdir.list";
 	std::string m1t_pfx;
 	std::string m1b_pfx;
 	std::string tools_menubar;
+	std::string cursor_ptr = "arrow";
 
 	static const std::string appname;
 	static const std::string appvers;
