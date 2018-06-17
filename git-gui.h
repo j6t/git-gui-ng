@@ -26,6 +26,7 @@ private:
 			const std::vector<std::string>& argv, bool is_blame);
 	int do_subcommand(const std::string& subcommand, const char* argv0,
 			std::vector<std::string>& argv);
+	void apply_theme_config();
 
 	void error_popup(const std::string& msg);
 	std::string ask_popup(const std::string& msg);

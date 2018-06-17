@@ -385,6 +385,21 @@ int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
 	return 0;
 }
 
+void GitGui::apply_theme_config()
+{
+	bool usettk = !!"expr {$::repo_config(gui.usettk)}"_tcli;
+	useTtk(usettk);
+	if (usettk) {
+		"set ::use_ttk 1"_tcl;
+		"set ::NS ttk"_tcl;
+		bind(winfo(wndclass, "."s), "<<ThemeChanged>>"s, "InitTheme"s);
+		"pave_toplevel ."_tcl;
+	} else {
+		"set ::use_ttk 0"_tcl;
+		"set ::NS {}"_tcl;
+	}
+}
+
 std::string GitGui::M1T(std::string key) const
 {
 	return m1t_pfx + std::move(key);
@@ -1180,18 +1195,6 @@ proc apply_config {} {
 		font configure ${font}bold -weight bold
 		font configure ${font}italic -slant italic
 	}
-
-	global use_ttk NS
-	set use_ttk 0
-	set NS {}
-	if {$repo_config(gui.usettk)} {
-		set use_ttk [package vsatisfies [package provide Tk] 8.5]
-		if {$use_ttk} {
-			set NS ttk
-			bind [winfo class .] <<ThemeChanged>> [list InitTheme]
-			pave_toplevel .
-		}
-	}
 }
 
 set default_config(branch.autosetupmerge) true
@@ -1508,6 +1511,7 @@ if {![info exists env(SSH_ASKPASS)]} {
 	{
 		"load_config 1"_tcl;
 		"apply_config"_tcl;
+		apply_theme_config();
 		"choose_repository::pick"_tcl;
 		repo.set_gitdir(std::string("return $_gitdir"_tcl));
 		repo.set_prefix(std::string("return $_prefix"_tcl));
@@ -1516,6 +1520,7 @@ if {![info exists env(SSH_ASKPASS)]} {
 	// _gitdir exists, so try loading the config
 	"load_config 0"_tcl;
 	"apply_config"_tcl;
+	apply_theme_config();
 
 	if (!discover_worktree())
 		return 1;
