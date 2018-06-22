@@ -3347,73 +3347,73 @@ proc commit_btn_caption {} {
 		".vpane.lower"s << paneconfigure(".vpane.lower.commarea"s) -stretch("never"s);
 	}
 
+	// -- Commit Area Buttons
+	//
+	frame(".vpane.lower.commarea.buttons"s);
+	label(".vpane.lower.commarea.buttons.l"s) -text({})
+		-anchor(Tk::w)
+		-justify(left);
+	pack(".vpane.lower.commarea.buttons.l"s) -side(top) -fill(Tk::x);
+	pack(".vpane.lower.commarea.buttons"s) -side(left) -fill(Tk::y);
+
+	button(".vpane.lower.commarea.buttons.rescan"s) -text(mc("Rescan"))
+		-command("ui_do_rescan"s);
+	pack(".vpane.lower.commarea.buttons.rescan"s) -side(top) -fill(Tk::x);
+	"lappend disable_on_lock "
+		"{.vpane.lower.commarea.buttons.rescan conf -state}"_tcl;
+
+	button(".vpane.lower.commarea.buttons.incall"s) -text(mc("Stage Changed"))
+		-command("do_add_all"s);
+	pack(".vpane.lower.commarea.buttons.incall"s) -side(top) -fill(Tk::x);
+	"lappend disable_on_lock "
+		"{.vpane.lower.commarea.buttons.incall conf -state}"_tcl;
+
+	if (!"is_enabled nocommitmsg"_tcli) {
+		button(".vpane.lower.commarea.buttons.signoff"s) -text(mc("Sign Off"))
+			-command("do_signoff"s);
+		pack(".vpane.lower.commarea.buttons.signoff"s) -side(top) -fill(Tk::x);
+	}
+
+	button(".vpane.lower.commarea.buttons.commit"s) -text("commit_btn_caption"_tcls)
+		-command("do_commit"s);
+	pack(".vpane.lower.commarea.buttons.commit"s) -side(top) -fill(Tk::x);
+	"lappend disable_on_lock "
+		"{.vpane.lower.commarea.buttons.commit conf -state}"_tcl;
+
+	if (!"is_enabled nocommit"_tcli) {
+		button(".vpane.lower.commarea.buttons.push"s) -text(mc("Push"))
+			-command("do_push_anywhere"s);
+		pack(".vpane.lower.commarea.buttons.push"s) -side(top) -fill(Tk::x);
+	}
+
+	// -- Commit Message Buffer
+	//
+	frame(".vpane.lower.commarea.buffer"s);
+	frame(".vpane.lower.commarea.buffer.header"s);
+	eval("set ui_comm " + ui_comm);
+	eval("set ui_coml " + ui_coml);
+
+	if (!"is_enabled nocommit"_tcli) {
+		radiobutton(".vpane.lower.commarea.buffer.header.new"s)
+			-text(mc("New Commit"))
+			-command("do_select_commit_type"s)
+			-variable("selected_commit_type"s)
+			-value("new"s);
+		"lappend disable_on_lock "
+			"[list .vpane.lower.commarea.buffer.header.new conf -state]"_tcl;
+		radiobutton(".vpane.lower.commarea.buffer.header.amend"s)
+			-text(mc("Amend Last Commit"))
+			-command("do_select_commit_type"s)
+			-variable("selected_commit_type"s)
+			-value("amend"s);
+		"lappend disable_on_lock "
+			"[list .vpane.lower.commarea.buffer.header.amend conf -state]"_tcl;
+	}
+
+	label(ui_coml)
+		-anchor(Tk::w)
+		-justify(left);
 	R"tcl(
-# -- Commit Area Buttons
-#
-${NS}::frame .vpane.lower.commarea.buttons
-${NS}::label .vpane.lower.commarea.buttons.l -text {} \
-	-anchor w \
-	-justify left
-pack .vpane.lower.commarea.buttons.l -side top -fill x
-pack .vpane.lower.commarea.buttons -side left -fill y
-
-${NS}::button .vpane.lower.commarea.buttons.rescan -text [mc Rescan] \
-	-command ui_do_rescan
-pack .vpane.lower.commarea.buttons.rescan -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.rescan conf -state}
-
-${NS}::button .vpane.lower.commarea.buttons.incall -text [mc "Stage Changed"] \
-	-command do_add_all
-pack .vpane.lower.commarea.buttons.incall -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.incall conf -state}
-
-if {![is_enabled nocommitmsg]} {
-	${NS}::button .vpane.lower.commarea.buttons.signoff -text [mc "Sign Off"] \
-		-command do_signoff
-	pack .vpane.lower.commarea.buttons.signoff -side top -fill x
-}
-
-${NS}::button .vpane.lower.commarea.buttons.commit -text [commit_btn_caption] \
-	-command do_commit
-pack .vpane.lower.commarea.buttons.commit -side top -fill x
-lappend disable_on_lock \
-	{.vpane.lower.commarea.buttons.commit conf -state}
-
-if {![is_enabled nocommit]} {
-	${NS}::button .vpane.lower.commarea.buttons.push -text [mc Push] \
-		-command do_push_anywhere
-	pack .vpane.lower.commarea.buttons.push -side top -fill x
-}
-
-# -- Commit Message Buffer
-#
-${NS}::frame .vpane.lower.commarea.buffer
-${NS}::frame .vpane.lower.commarea.buffer.header
-set ui_comm .vpane.lower.commarea.buffer.frame.t
-set ui_coml .vpane.lower.commarea.buffer.header.l
-
-if {![is_enabled nocommit]} {
-	${NS}::radiobutton .vpane.lower.commarea.buffer.header.new \
-		-text [mc "New Commit"] \
-		-command do_select_commit_type \
-		-variable selected_commit_type \
-		-value new
-	lappend disable_on_lock \
-		[list .vpane.lower.commarea.buffer.header.new conf -state]
-	${NS}::radiobutton .vpane.lower.commarea.buffer.header.amend \
-		-text [mc "Amend Last Commit"] \
-		-command do_select_commit_type \
-		-variable selected_commit_type \
-		-value amend
-	lappend disable_on_lock \
-		[list .vpane.lower.commarea.buffer.header.amend conf -state]
-}
-
-${NS}::label $ui_coml \
-	-anchor w \
-	-justify left
 proc trace_commit_type {varname args} {
 	global ui_coml commit_type
 	switch -glob -- $commit_type {
@@ -3427,67 +3427,69 @@ proc trace_commit_type {varname args} {
 	$ui_coml conf -text $txt
 }
 trace add variable commit_type write trace_commit_type
-pack $ui_coml -side left -fill x
+	)tcl"_tcl;
+	pack(ui_coml) -side(left) -fill(Tk::x);
 
-if {![is_enabled nocommit]} {
-	pack .vpane.lower.commarea.buffer.header.amend -side right
-	pack .vpane.lower.commarea.buffer.header.new -side right
-}
-
-textframe .vpane.lower.commarea.buffer.frame
-ttext $ui_comm -background white -foreground black \
-	-borderwidth 1 \
-	-undo true \
-	-maxundo 20 \
-	-autoseparators true \
-	-takefocus 1 \
-	-highlightthickness 1 \
-	-relief sunken \
-	-width $repo_config(gui.commitmsgwidth) -height 9 -wrap none \
-	-font font_diff \
-	-yscrollcommand {.vpane.lower.commarea.buffer.frame.sby set}
-${NS}::scrollbar .vpane.lower.commarea.buffer.frame.sby \
-	-command [list $ui_comm yview]
-
-pack .vpane.lower.commarea.buffer.frame.sby -side right -fill y
-pack $ui_comm -side left -fill y
-pack .vpane.lower.commarea.buffer.header -side top -fill x
-pack .vpane.lower.commarea.buffer.frame -side left -fill y
-pack .vpane.lower.commarea.buffer -side left -fill y
-
-# -- Commit Message Buffer Context Menu
-#
-set ctxm .vpane.lower.commarea.buffer.ctxm
-menu $ctxm -tearoff 0
-$ctxm add command \
-	-label [mc Cut] \
-	-command {tk_textCut $ui_comm}
-$ctxm add command \
-	-label [mc Copy] \
-	-command {tk_textCopy $ui_comm}
-$ctxm add command \
-	-label [mc Paste] \
-	-command {tk_textPaste $ui_comm}
-$ctxm add command \
-	-label [mc Delete] \
-	-command {catch {$ui_comm delete sel.first sel.last}}
-$ctxm add separator
-$ctxm add command \
-	-label [mc "Select All"] \
-	-command {focus $ui_comm;$ui_comm tag add sel 0.0 end}
-$ctxm add command \
-	-label [mc "Copy All"] \
-	-command {
-		$ui_comm tag add sel 0.0 end
-		tk_textCopy $ui_comm
-		$ui_comm tag remove sel 0.0 end
+	if (!"is_enabled nocommit"_tcli) {
+		pack(".vpane.lower.commarea.buffer.header.amend"s) -side(right);
+		pack(".vpane.lower.commarea.buffer.header.new"s) -side(right);
 	}
-$ctxm add separator
-$ctxm add command \
-	-label [mc "Sign Off"] \
-	-command do_signoff
-set ui_comm_ctxm $ctxm
 
+	textframe(".vpane.lower.commarea.buffer.frame"s);
+	ttext(ui_comm) -background("white"s) -foreground("black"s)
+		-borderwidth(1)
+		-undo(true)
+		-maxundo(20)
+		-autoseparators(true)
+		-takefocus(1)
+		-highlightthickness(1)
+		-relief(sunken)
+		-width("expr {$repo_config(gui.commitmsgwidth)}"_tcli) -height(9) -wrap(none)
+		-font("font_diff"s)
+		-yscrollcommand(".vpane.lower.commarea.buffer.frame.sby set"s);
+	scrollbar(".vpane.lower.commarea.buffer.frame.sby"s)
+		-command([&]() { ui_comm << yview(); });
+
+	pack(".vpane.lower.commarea.buffer.frame.sby"s) -side(right) -fill(Tk::y);
+	pack(ui_comm) -side(left) -fill(Tk::y);
+	pack(".vpane.lower.commarea.buffer.header"s) -side(top) -fill(Tk::x);
+	pack(".vpane.lower.commarea.buffer.frame"s) -side(left) -fill(Tk::y);
+	pack(".vpane.lower.commarea.buffer"s) -side(left) -fill(Tk::y);
+
+	// -- Commit Message Buffer Context Menu
+	//
+	auto ctxm = ".vpane.lower.commarea.buffer.ctxm"s;
+	menu(ctxm) -tearoff(0);
+	ctxm << add(command)
+		-menulabel(mc("Cut"))
+		-command([&]() { tk_textCut(ui_comm); });
+	ctxm << add(command)
+		-menulabel(mc("Copy"))
+		-command([&]() { tk_textCopy(ui_comm); });
+	ctxm << add(command)
+		-menulabel(mc("Paste"))
+		-command([&]() { tk_textPaste(ui_comm); });
+	ctxm << add(command)
+		-menulabel(mc("Delete"))
+		-command([&]() { try { ui_comm << deletetext("sel.first"s, "sel.last"s); } catch (const TkError&) {} });
+	ctxm << add(separator);
+	ctxm << add(command)
+		-menulabel(mc("Select All"))
+		-command([&]() { focus(ui_comm); ui_comm << tag(add, "sel"s, txt(0,0), Tk::end); });
+	ctxm << add(command)
+		-menulabel(mc("Copy All"))
+		-command([&]() {
+			ui_comm << tag(add, "sel"s, txt(0,0), Tk::end);
+			tk_textCopy(ui_comm);
+			ui_comm << tag(Tk::remove, "sel"s, txt(0,0), Tk::end);
+		});
+	ctxm << add(separator);
+	ctxm << add(command)
+		-menulabel(mc("Sign Off"))
+		-command("do_signoff"s);
+	eval("set ui_comm_ctxm "s + ctxm);
+
+	R"tcl(
 # -- Diff Header
 #
 proc trace_current_diff_path {varname args} {
@@ -3845,32 +3847,34 @@ if {[info exists repo_config(gui.geometry)]} {
 if {[info exists repo_config(gui.wmstate)]} {
 	catch {wm state . $repo_config(gui.wmstate)}
 }
+	)tcl"_tcl;
 
-# -- Key Bindings
-#
-bind $ui_comm <$M1B-Key-Return> {do_commit;break}
-bind $ui_comm <$M1B-Key-t> {do_add_selection;break}
-bind $ui_comm <$M1B-Key-T> {do_add_selection;break}
-bind $ui_comm <$M1B-Key-u> {do_unstage_selection;break}
-bind $ui_comm <$M1B-Key-U> {do_unstage_selection;break}
-bind $ui_comm <$M1B-Key-j> {do_revert_selection;break}
-bind $ui_comm <$M1B-Key-J> {do_revert_selection;break}
-bind $ui_comm <$M1B-Key-i> {do_add_all;break}
-bind $ui_comm <$M1B-Key-I> {do_add_all;break}
-bind $ui_comm <$M1B-Key-x> {tk_textCut %W;break}
-bind $ui_comm <$M1B-Key-X> {tk_textCut %W;break}
-bind $ui_comm <$M1B-Key-c> {tk_textCopy %W;break}
-bind $ui_comm <$M1B-Key-C> {tk_textCopy %W;break}
-bind $ui_comm <$M1B-Key-v> {tk_textPaste %W; %W see insert; break}
-bind $ui_comm <$M1B-Key-V> {tk_textPaste %W; %W see insert; break}
-bind $ui_comm <$M1B-Key-a> {%W tag add sel 0.0 end;break}
-bind $ui_comm <$M1B-Key-A> {%W tag add sel 0.0 end;break}
-bind $ui_comm <$M1B-Key-minus> {show_less_context;break}
-bind $ui_comm <$M1B-Key-KP_Subtract> {show_less_context;break}
-bind $ui_comm <$M1B-Key-equal> {show_more_context;break}
-bind $ui_comm <$M1B-Key-plus> {show_more_context;break}
-bind $ui_comm <$M1B-Key-KP_Add> {show_more_context;break}
+	// -- Key Bindings
+	//
+	bind(ui_comm, M1B("Return"), "do_commit;break"s);
+	bind(ui_comm, M1B("t"), "do_add_selection;break"s);
+	bind(ui_comm, M1B("T"), "do_add_selection;break"s);
+	bind(ui_comm, M1B("u"), "do_unstage_selection;break"s);
+	bind(ui_comm, M1B("U"), "do_unstage_selection;break"s);
+	bind(ui_comm, M1B("j"), "do_revert_selection;break"s);
+	bind(ui_comm, M1B("J"), "do_revert_selection;break"s);
+	bind(ui_comm, M1B("i"), "do_add_all;break"s);
+	bind(ui_comm, M1B("I"), "do_add_all;break"s);
+	bind(ui_comm, M1B("x"), "tk_textCut %W;break"s);
+	bind(ui_comm, M1B("X"), "tk_textCut %W;break"s);
+	bind(ui_comm, M1B("c"), "tk_textCopy %W;break"s);
+	bind(ui_comm, M1B("C"), "tk_textCopy %W;break"s);
+	bind(ui_comm, M1B("v"), "tk_textPaste %W; %W see insert; break"s);
+	bind(ui_comm, M1B("V"), "tk_textPaste %W; %W see insert; break"s);
+	bind(ui_comm, M1B("a"), "%W tag add sel 0.0 end;break"s);
+	bind(ui_comm, M1B("A"), "%W tag add sel 0.0 end;break"s);
+	bind(ui_comm, M1B("minus"), "show_less_context;break"s);
+	bind(ui_comm, M1B("KP_Subtract"), "show_less_context;break"s);
+	bind(ui_comm, M1B("equal"), "show_more_context;break"s);
+	bind(ui_comm, M1B("plus"), "show_more_context;break"s);
+	bind(ui_comm, M1B("KP_Add"), "show_more_context;break"s);
 
+	R"tcl(
 bind $ui_diff <$M1B-Key-x> {tk_textCopy %W;break}
 bind $ui_diff <$M1B-Key-X> {tk_textCopy %W;break}
 bind $ui_diff <$M1B-Key-c> {tk_textCopy %W;break}

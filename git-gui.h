@@ -46,6 +46,8 @@ private:
 	Repo repo;
 	std::string ui_index = ".vpane.files.index.list";
 	std::string ui_workdir = ".vpane.files.workdir.list";
+	std::string ui_comm = ".vpane.lower.commarea.buffer.frame.t";
+	std::string ui_coml = ".vpane.lower.commarea.buffer.header.l";
 	std::string m1t_pfx;
 	std::string m1b_pfx;
 	std::string tools_menubar;
