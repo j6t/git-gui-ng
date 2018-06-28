@@ -33,6 +33,8 @@ private:
 
 	std::string M1T(std::string key) const;
 	std::string M1B(std::string key) const;
+	static void bind_button3(const std::string& w, std::function<void(int,int)> cb);
+	static void bind_button3_xyXY(const std::string& w, std::function<void(int,int,int,int)> cb);
 
 	// about
 	static void do_about();

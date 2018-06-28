@@ -410,6 +410,28 @@ std::string GitGui::M1B(std::string key) const
 	return m1b_pfx + "Key-"s + std::move(key) + ">";
 }
 
+template<class... ARGS>
+static void bind_button3(const std::string& w, ARGS&&... args)
+{
+	if ("is_MacOSX"_tcli) {
+		// Mac OS X sends Button-2 on right click through three-button mouse,
+		// or through trackpad right-clicking (two-finger touch + click).
+		bind(w, "<Any-Button-2>", args...);
+		bind(w, "<Control-Button-1>", args...);
+	}
+	bind(w, "<Any-Button-3>", std::forward<ARGS>(args)...);
+}
+
+void GitGui::bind_button3(const std::string& w, std::function<void(int,int)> cb)
+{
+	::bind_button3(w, std::move(cb), event_X, event_Y);
+}
+
+void GitGui::bind_button3_xyXY(const std::string& w, std::function<void(int,int,int,int)> cb)
+{
+	::bind_button3(w, std::move(cb), event_x, event_y, event_X, event_Y);
+}
+
 int GitGui::main(const char* argv0, std::vector<std::string> argv)
 {
 	Tk::init(argv0);

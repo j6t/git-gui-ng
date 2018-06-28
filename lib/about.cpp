@@ -24,19 +24,6 @@ static auto paddedlabel(std::string w)
 }
 
 
-// TODO: find a better place
-template<class... ARGS>
-void bind_button3(const std::string& w, ARGS&&... args)
-{
-	if ("is_MacOSX"_tcli) {
-		// Mac OS X sends Button-2 on right click through three-button mouse,
-		// or through trackpad right-clicking (two-finger touch + click).
-		bind(w, "<Any-Button-2>", args...);
-		bind(w, "<Control-Button-1>", args...);
-	}
-	bind(w, "<Any-Button-3>", std::forward<ARGS>(args)...);
-}
-
 void GitGui::do_about()
 {
 	auto tcl_patchLevel = "expr {$tcl_patchLevel}"_tcls;
@@ -107,7 +94,7 @@ void GitGui::do_about()
 	bind(w, "<Key-Return>", dtor);
 	bind_button3(w + ".vers"s, [=](int x, int y) {
 			tk_popup(w + ".ctxm"s, x, y); grab(w); focus(w);
-		}, event_X, event_Y);
+		});
 	wm(title, w, mc("About %s", appname));
 	tkwait(window, w);
 }
