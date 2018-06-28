@@ -2361,15 +2361,17 @@ proc many2scrollbar {list mode sb top bottom} {
 	$sb set $top $bottom
 	foreach w $list {$w $mode moveto $top}
 }
+	)tcl"_tcl;
 
-proc incr_font_size {font {amt 1}} {
-	set sz [font configure $font -size]
-	incr sz $amt
-	font configure $font -size $sz
-	font configure ${font}bold -size $sz
-	font configure ${font}italic -size $sz
-}
+	auto incr_font_size = [](const std::string& font, int amt) {
+		int sz = fonts(configure, font) -size();
+		sz += amt;
+		fonts(configure, font) -size(sz);
+		fonts(configure, font + "bold"s) -size(sz);
+		fonts(configure, font + "italic"s) -size(sz);
+	};
 
+	R"tcl(
 ######################################################################
 ##
 ## ui commands
@@ -3515,9 +3517,9 @@ trace add variable commit_type write trace_commit_type
 		-command("do_signoff"s);
 	eval("set ui_comm_ctxm "s + ctxm);
 
+	// -- Diff Header
+	//
 	R"tcl(
-# -- Diff Header
-#
 proc trace_current_diff_path {varname args} {
 	global current_diff_path diff_actions file_states
 	if {$current_diff_path eq {}} {
@@ -3541,230 +3543,247 @@ proc trace_current_diff_path {varname args} {
 	}
 }
 trace add variable current_diff_path write trace_current_diff_path
+	)tcl"_tcl;
 
-gold_frame .vpane.lower.diff.header
-tlabel .vpane.lower.diff.header.status \
-	-background gold \
-	-foreground black \
-	-width $max_status_desc \
-	-anchor w \
-	-justify left
-tlabel .vpane.lower.diff.header.file \
-	-background gold \
-	-foreground black \
-	-anchor w \
-	-justify left
-tlabel .vpane.lower.diff.header.path \
-	-background gold \
-	-foreground black \
-	-anchor w \
-	-justify left
-pack .vpane.lower.diff.header.status -side left
-pack .vpane.lower.diff.header.file -side left
-pack .vpane.lower.diff.header.path -fill x
-set ctxm .vpane.lower.diff.header.ctxm
-menu $ctxm -tearoff 0
-$ctxm add command \
-	-label [mc Copy] \
-	-command {
-		clipboard clear
-		clipboard append \
-			-format STRING \
-			-type STRING \
-			-- $current_diff_path
-	}
-lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-bind_button3 .vpane.lower.diff.header.path "tk_popup $ctxm %X %Y"
+	gold_frame(".vpane.lower.diff.header"s);
+	tlabel(".vpane.lower.diff.header.status"s)
+		-background("gold"s)
+		-foreground("black"s)
+		-width("expr {$max_status_desc}"_tcli)
+		-anchor(Tk::w)
+		-justify(left);
+	tlabel(".vpane.lower.diff.header.file"s)
+		-background("gold"s)
+		-foreground("black"s)
+		-anchor(Tk::w)
+		-justify(left);
+	tlabel(".vpane.lower.diff.header.path"s)
+		-background("gold"s)
+		-foreground("black"s)
+		-anchor(Tk::w)
+		-justify(left);
+	pack(".vpane.lower.diff.header.status"s) -side(left);
+	pack(".vpane.lower.diff.header.file"s) -side(left);
+	pack(".vpane.lower.diff.header.path"s) -fill(Tk::x);
+	ctxm = ".vpane.lower.diff.header.ctxm"s;
+	menu(ctxm) -tearoff(0);
+	ctxm << add(command)
+		-menulabel(mc("Copy"))
+		-command(R"tcl(
+			clipboard clear
+			clipboard append \
+				-format STRING \
+				-type STRING \
+				-- $current_diff_path
+		 )tcl"s);
+	eval("lappend diff_actions [list "s + ctxm + " entryconf ["s + ctxm + " index last] -state]"s);
+	bind_button3(".vpane.lower.diff.header.path"s, [=](int X, int Y) { tk_popup(ctxm, X, Y); });
 
-# -- Diff Body
-#
-textframe .vpane.lower.diff.body
-set ui_diff .vpane.lower.diff.body.t
-ttext $ui_diff -background white -foreground black \
-	-borderwidth 0 \
-	-width 80 -height 5 -wrap none \
-	-font font_diff \
-	-takefocus 1 -highlightthickness 1 \
-	-xscrollcommand {.vpane.lower.diff.body.sbx set} \
-	-yscrollcommand {.vpane.lower.diff.body.sby set} \
-	-state disabled
-catch {$ui_diff configure -tabstyle wordprocessor}
-${NS}::scrollbar .vpane.lower.diff.body.sbx -orient horizontal \
-	-command [list $ui_diff xview]
-${NS}::scrollbar .vpane.lower.diff.body.sby -orient vertical \
-	-command [list $ui_diff yview]
-pack .vpane.lower.diff.body.sbx -side bottom -fill x
-pack .vpane.lower.diff.body.sby -side right -fill y
-pack $ui_diff -side left -fill both -expand 1
-pack .vpane.lower.diff.header -side top -fill x
-pack .vpane.lower.diff.body -side bottom -fill both -expand 1
+	// -- Diff Body
+	//
+	textframe(".vpane.lower.diff.body"s);
+	eval("set ui_diff "s + ui_diff);
+	ttext(ui_diff) -background("white"s) -foreground("black"s)
+		-borderwidth(0)
+		-width(80) -height(5) -wrap(none)
+		-font("font_diff"s)
+		-takefocus(1) -highlightthickness(1)
+		-xscrollcommand(".vpane.lower.diff.body.sbx set"s)
+		-yscrollcommand(".vpane.lower.diff.body.sby set"s)
+		-state(disabled);
+	"catch {$ui_diff configure -tabstyle wordprocessor}"_tcl;
+	scrollbar(".vpane.lower.diff.body.sbx"s) -orient(horizontal)
+		-command([&](const std::vector<std::string>& cmd) { ui_diff << xview(cmd); });
+	scrollbar(".vpane.lower.diff.body.sby"s) -orient(vertical)
+		-command([&](const std::vector<std::string>& cmd) { ui_diff << yview(cmd); });
+	pack(".vpane.lower.diff.body.sbx"s) -side(bottom) -fill(Tk::x);
+	pack(".vpane.lower.diff.body.sby"s) -side(right) -fill(Tk::y);
+	pack(ui_diff) -side(left) -fill(both) -expand(1);
+	pack(".vpane.lower.diff.header"s) -side(top) -fill(Tk::x);
+	pack(".vpane.lower.diff.body"s) -side(bottom) -fill(both) -expand(1);
 
-foreach {n c} {0 black 1 red4 2 green4 3 yellow4 4 blue4 5 magenta4 6 cyan4 7 grey60} {
-	$ui_diff tag configure clr4$n -background $c
-	$ui_diff tag configure clri4$n -foreground $c
-	$ui_diff tag configure clr3$n -foreground $c
-	$ui_diff tag configure clri3$n -background $c
-}
-$ui_diff tag configure clr1 -font font_diffbold
-$ui_diff tag configure clr4 -underline 1
+	auto confcolor = [&](const std::string& n, const std::string& c) {
+		ui_diff << tag(configure, "clr4"s  + n) -background(c);
+		ui_diff << tag(configure, "clri4"s + n) -foreground(c);
+		ui_diff << tag(configure, "clr3"s  + n) -foreground(c);
+		ui_diff << tag(configure, "clri3"s + n) -background(c);
+	};
+	confcolor("0"s, "black"s);
+	confcolor("1"s, "red4"s);
+	confcolor("2"s, "green4"s);
+	confcolor("3"s, "yellow4"s);
+	confcolor("4"s, "blue4"s);
+	confcolor("5"s, "magenta4"s);
+	confcolor("6"s, "cyan4"s);
+	confcolor("7"s, "grey60"s);
+	ui_diff << tag(configure, "clr1"s) -font("font_diffbold"s);
+	ui_diff << tag(configure, "clr4"s) -underline(1);
 
-$ui_diff tag conf d_info -foreground blue -font font_diffbold
+	ui_diff << tag(configure, "d_info"s) -foreground("blue"s) -font("font_diffbold"s);
 
-$ui_diff tag conf d_cr -elide true
-$ui_diff tag conf d_@ -font font_diffbold
-$ui_diff tag conf d_+ -foreground {#00a000}
-$ui_diff tag conf d_- -foreground red
+	ui_diff << tag(configure, "d_cr"s) -elide(true);
+	ui_diff << tag(configure, "d_@"s) -font("font_diffbold"s);
+	ui_diff << tag(configure, "d_+"s) -foreground("#00a000"s);
+	ui_diff << tag(configure, "d_-"s) -foreground("red"s);
 
-$ui_diff tag conf d_++ -foreground {#00a000}
-$ui_diff tag conf d_-- -foreground red
-$ui_diff tag conf d_+s \
-	-foreground {#00a000} \
-	-background {#e2effa}
-$ui_diff tag conf d_-s \
-	-foreground red \
-	-background {#e2effa}
-$ui_diff tag conf d_s+ \
-	-foreground {#00a000} \
-	-background ivory1
-$ui_diff tag conf d_s- \
-	-foreground red \
-	-background ivory1
+	ui_diff << tag(configure, "d_++"s) -foreground("#00a000"s);
+	ui_diff << tag(configure, "d_--"s) -foreground("red"s);
+	ui_diff << tag(configure, "d_+s"s)
+		-foreground("#00a000"s)
+		-background("#e2effa"s);
+	ui_diff << tag(configure, "d_-s"s)
+		-foreground("red"s)
+		-background("#e2effa"s);
+	ui_diff << tag(configure, "d_s+"s)
+		-foreground("#00a000"s)
+		-background("ivory1"s);
+	ui_diff << tag(configure, "d_s-"s)
+		-foreground("red"s)
+		-background("ivory1"s);
 
-$ui_diff tag conf d< \
-	-foreground orange \
-	-font font_diffbold
-$ui_diff tag conf d= \
-	-foreground orange \
-	-font font_diffbold
-$ui_diff tag conf d> \
-	-foreground orange \
-	-font font_diffbold
+	ui_diff << tag(configure, "d<"s)
+		-foreground("orange"s)
+		-font("font_diffbold"s);
+	ui_diff << tag(configure, "d="s)
+		-foreground("orange"s)
+		-font("font_diffbold"s);
+	ui_diff << tag(configure, "d>"s)
+		-foreground("orange"s)
+		-font("font_diffbold"s);
 
-$ui_diff tag raise sel
+	ui_diff << tag(raise, "sel"s);
 
-# -- Diff Body Context Menu
-#
+	// -- Diff Body Context Menu
+	//
 
-proc create_common_diff_popup {ctxm} {
-	$ctxm add command \
-		-label [mc Refresh] \
-		-command reshow_diff
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add command \
-		-label [mc Copy] \
-		-command {tk_textCopy $ui_diff}
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add command \
-		-label [mc "Select All"] \
-		-command {focus $ui_diff;$ui_diff tag add sel 0.0 end}
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add command \
-		-label [mc "Copy All"] \
-		-command {
-			$ui_diff tag add sel 0.0 end
-			tk_textCopy $ui_diff
-			$ui_diff tag remove sel 0.0 end
-		}
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add separator
-	$ctxm add command \
-		-label [mc "Decrease Font Size"] \
-		-command {incr_font_size font_diff -1}
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add command \
-		-label [mc "Increase Font Size"] \
-		-command {incr_font_size font_diff 1}
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add separator
-	set emenu $ctxm.enc
-	menu $emenu
-	build_encoding_menu $emenu [list force_diff_encoding]
-	$ctxm add cascade \
-		-label [mc "Encoding"] \
-		-menu $emenu
-	lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-	$ctxm add separator
-	$ctxm add command -label [mc "Options..."] \
-		-command do_options
-}
+	auto add_diff_actions_index_last = [&](const std::string& ctxm) {
+		eval("lappend diff_actions [list "s + ctxm + " entryconf ["s + ctxm + " index last] -state]"s);
+	};
 
-set ctxm .vpane.lower.diff.body.ctxm
-menu $ctxm -tearoff 0
-$ctxm add command \
-	-label [mc "Apply/Reverse Hunk"] \
-	-command {apply_hunk $cursorX $cursorY}
-set ui_diff_applyhunk [$ctxm index last]
-lappend diff_actions [list $ctxm entryconf $ui_diff_applyhunk -state]
-$ctxm add command \
-	-label [mc "Apply/Reverse Line"] \
-	-command {apply_range_or_line $cursorX $cursorY; do_rescan}
-set ui_diff_applyline [$ctxm index last]
-lappend diff_actions [list $ctxm entryconf $ui_diff_applyline -state]
-$ctxm add separator
-$ctxm add command \
-	-label [mc "Show Less Context"] \
-	-command show_less_context
-lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-$ctxm add command \
-	-label [mc "Show More Context"] \
-	-command show_more_context
-lappend diff_actions [list $ctxm entryconf [$ctxm index last] -state]
-$ctxm add separator
-create_common_diff_popup $ctxm
+	auto create_common_diff_popup = [&](const std::string& ctxm) {
+		ctxm << add(command)
+			-menulabel(mc("Refresh"))
+			-command("reshow_diff"s);
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(command)
+			-menulabel(mc("Copy"))
+			-command("tk_textCopy $ui_diff"s);
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(command)
+			-menulabel(mc("Select All"))
+			-command([=]() {
+				focus(ui_diff);
+				ui_diff << tag(add, "sel"s, txt(0,0), Tk::end);
+			});
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(command)
+			-menulabel(mc("Copy All"))
+			-command([=]() {
+				ui_diff << tag(add, "sel"s, txt(0,0), Tk::end);
+				tk_textCopy(ui_diff);
+				ui_diff << tag(Tk::remove, "sel"s, txt(0,0), Tk::end);
+			});
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(separator);
+		ctxm << add(command)
+			-menulabel(mc("Decrease Font Size"))
+			-command([&]() { incr_font_size("font_diff"s, -1); });
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(command)
+			-menulabel(mc("Increase Font Size"))
+			-command([&]() { incr_font_size("font_diff"s, 1); });
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(separator);
+		auto emenu  = ctxm + ".enc"s;
+		menu(emenu);
+		eval("build_encoding_menu "s + emenu + " [list force_diff_encoding]"s);
+		ctxm << add(cascade)
+			-menulabel(mc("Encoding"))
+			-submenu(emenu);
+		add_diff_actions_index_last(ctxm);
+		ctxm << add(separator);
+		ctxm << add(command) -menulabel(mc("Options..."))
+			-command("do_options"s);
+	};
 
-set ctxmmg .vpane.lower.diff.body.ctxmmg
-menu $ctxmmg -tearoff 0
-$ctxmmg add command \
-	-label [mc "Run Merge Tool"] \
-	-command {merge_resolve_tool}
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add separator
-$ctxmmg add command \
-	-label [mc "Use Remote Version"] \
-	-command {merge_resolve_one 3}
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add command \
-	-label [mc "Use Local Version"] \
-	-command {merge_resolve_one 2}
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add command \
-	-label [mc "Revert To Base"] \
-	-command {merge_resolve_one 1}
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add separator
-$ctxmmg add command \
-	-label [mc "Show Less Context"] \
-	-command show_less_context
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add command \
-	-label [mc "Show More Context"] \
-	-command show_more_context
-lappend diff_actions [list $ctxmmg entryconf [$ctxmmg index last] -state]
-$ctxmmg add separator
-create_common_diff_popup $ctxmmg
+	ctxm = ".vpane.lower.diff.body.ctxm"s;
+	menu(ctxm) -tearoff(0);
+	ctxm << add(command)
+		-menulabel(mc("Apply/Reverse Hunk"))
+		-command("apply_hunk $cursorX $cursorY"s);
+	std::string ui_diff_applyhunk = eval(ctxm + " index last"s);
+	add_diff_actions_index_last(ctxm);
+	ctxm << add(command)
+		-menulabel(mc("Apply/Reverse Line"))
+		-command("apply_range_or_line $cursorX $cursorY; do_rescan"s);
+	std::string ui_diff_applyline = eval(ctxm + " index last"s);
+	add_diff_actions_index_last(ctxm);
+	ctxm << add(separator);
+	ctxm << add(command)
+		-menulabel(mc("Show Less Context"))
+		-command("show_less_context"s);
+	add_diff_actions_index_last(ctxm);
+	ctxm << add(command)
+		-menulabel(mc("Show More Context"))
+		-command("show_more_context"s);
+	add_diff_actions_index_last(ctxm);
+	ctxm << add(separator);
+	create_common_diff_popup(ctxm);
 
-set ctxmsm .vpane.lower.diff.body.ctxmsm
-menu $ctxmsm -tearoff 0
-$ctxmsm add command \
-	-label [mc "Visualize These Changes In The Submodule"] \
-	-command {do_gitk -- true}
-lappend diff_actions [list $ctxmsm entryconf [$ctxmsm index last] -state]
-$ctxmsm add command \
-	-label [mc "Visualize Current Branch History In The Submodule"] \
-	-command {do_gitk {} true}
-lappend diff_actions [list $ctxmsm entryconf [$ctxmsm index last] -state]
-$ctxmsm add command \
-	-label [mc "Visualize All Branch History In The Submodule"] \
-	-command {do_gitk --all true}
-lappend diff_actions [list $ctxmsm entryconf [$ctxmsm index last] -state]
-$ctxmsm add separator
-$ctxmsm add command \
-	-label [mc "Start git gui In The Submodule"] \
-	-command {do_git_gui}
-lappend diff_actions [list $ctxmsm entryconf [$ctxmsm index last] -state]
-$ctxmsm add separator
-create_common_diff_popup $ctxmsm
+	auto ctxmmg = ".vpane.lower.diff.body.ctxmmg"s;
+	menu(ctxmmg) -tearoff(0);
+	ctxmmg << add(command)
+		-menulabel(mc("Run Merge Tool"))
+		-command("merge_resolve_tool"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(separator);
+	ctxmmg << add(command)
+		-menulabel(mc("Use Remote Version"))
+		-command("merge_resolve_one 3"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(command)
+		-menulabel(mc("Use Local Version"))
+		-command("merge_resolve_one 2"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(command)
+		-menulabel(mc("Revert To Base"))
+		-command("merge_resolve_one 1"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(separator);
+	ctxmmg << add(command)
+		-menulabel(mc("Show Less Context"))
+		-command("show_less_context"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(command)
+		-menulabel(mc("Show More Context"))
+		-command("show_more_context"s);
+	add_diff_actions_index_last(ctxmmg);
+	ctxmmg << add(separator);
+	create_common_diff_popup(ctxmmg);
 
+	auto ctxmsm = ".vpane.lower.diff.body.ctxmsm"s;
+	menu(ctxmsm) -tearoff(0);
+	ctxmsm << add(command)
+		-menulabel(mc("Visualize These Changes In The Submodule"))
+		-command("do_gitk -- true"s);
+	add_diff_actions_index_last(ctxmsm);
+	ctxmsm << add(command)
+		-menulabel(mc("Visualize Current Branch History In The Submodule"))
+		-command("do_gitk {} true"s);
+	add_diff_actions_index_last(ctxmsm);
+	ctxmsm << add(command)
+		-menulabel(mc("Visualize All Branch History In The Submodule"))
+		-command("do_gitk --all true"s);
+	add_diff_actions_index_last(ctxmsm);
+	ctxmsm << add(separator);
+	ctxmsm << add(command)
+		-menulabel(mc("Start git gui In The Submodule"))
+		-command("do_git_gui"s);
+	add_diff_actions_index_last(ctxmsm);
+	ctxmsm << add(separator);
+	create_common_diff_popup(ctxmsm);
+
+	R"tcl(
 proc has_textconv {path} {
 	if {[is_config_false gui.textconv]} {
 		return 0
@@ -3777,55 +3796,58 @@ proc has_textconv {path} {
 		return 0
 	}
 }
+	)tcl"_tcl;
 
-proc popup_diff_menu {ctxm ctxmmg ctxmsm x y X Y} {
-	global current_diff_path file_states
-	set ::cursorX $x
-	set ::cursorY $y
-	if {[info exists file_states($current_diff_path)]} {
-		set state [lindex $file_states($current_diff_path) 0]
-	} else {
-		set state {__}
-	}
-	if {[string first {U} $state] >= 0} {
-		tk_popup $ctxmmg $X $Y
-	} elseif {$::is_submodule_diff} {
-		tk_popup $ctxmsm $X $Y
-	} else {
-		set has_range [expr {[$::ui_diff tag nextrange sel 0.0] != {}}]
-		if {$::ui_index eq $::current_diff_side} {
-			set l [mc "Unstage Hunk From Commit"]
-			if {$has_range} {
-				set t [mc "Unstage Lines From Commit"]
-			} else {
-				set t [mc "Unstage Line From Commit"]
-			}
+	auto popup_diff_menu = [=](int x, int y, int X, int Y) {
+		"::cursorX"_tclv = x;
+		"::cursorY"_tclv = y;
+		std::string diffstate;
+		if ("info exists file_states($current_diff_path)"_tcli) {
+			diffstate = "lindex $file_states($current_diff_path) 0"_tcls;
 		} else {
-			set l [mc "Stage Hunk For Commit"]
-			if {$has_range} {
-				set t [mc "Stage Lines For Commit"]
-			} else {
-				set t [mc "Stage Line For Commit"]
-			}
+			diffstate = "__"s;
 		}
-		if {$::is_3way_diff
-			|| $current_diff_path eq {}
-			|| {__} eq $state
-			|| {_O} eq $state
-			|| [string match {?T} $state]
-			|| [string match {T?} $state]
-			|| [has_textconv $current_diff_path]} {
-			set s disabled
+		if (diffstate.find('U') != std::string::npos) {
+			tk_popup(ctxmmg, X, Y);
+		} else if ("::is_submodule_diff"_tclvi) {
+			tk_popup(ctxmsm, X, Y);
 		} else {
-			set s normal
+			bool has_range = !"$::ui_diff tag nextrange sel 0.0"_tcls.empty();
+			std::string l, st, t;
+			if (ui_index == "::current_diff_side"_tclvs) {
+				l = mc("Unstage Hunk From Commit");
+				if (has_range) {
+					t = mc("Unstage Lines From Commit");
+				} else {
+					t = mc("Unstage Line From Commit");
+				}
+			} else {
+				l = mc("Stage Hunk For Commit");
+				if (has_range) {
+					t = mc("Stage Lines For Commit");
+				} else {
+					t = mc("Stage Line For Commit");
+				}
+			}
+			if ("::is_3way_diff"_tclvi
+				|| "current_diff_path"_tclvs.empty()
+				|| "__"s == diffstate
+				|| "_O"s == diffstate
+				|| diffstate.at(1) == 'T'
+				|| diffstate.at(0) == 'T'
+				|| "has_textconv $current_diff_path]"_tcli) {
+				st = "disabled"s;
+			} else {
+				st = "normal"s;
+			}
+			ctxm << entryconfigure(ui_diff_applyhunk) -state(s) -menulabel(l);
+			ctxm << entryconfigure(ui_diff_applyline) -state(s) -menulabel(t);
+			tk_popup(ctxm, X, Y);
 		}
-		$ctxm entryconf $::ui_diff_applyhunk -state $s -label $l
-		$ctxm entryconf $::ui_diff_applyline -state $s -label $t
-		tk_popup $ctxm $X $Y
-	}
-}
-bind_button3 $ui_diff [list popup_diff_menu $ctxm $ctxmmg $ctxmsm %x %y %X %Y]
+	};
+	bind_button3_xyXY(ui_diff, popup_diff_menu);
 
+	R"tcl(
 # -- Status Bar
 #
 set main_status [::status_bar::new .status]

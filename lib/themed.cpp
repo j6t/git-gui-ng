@@ -349,6 +349,15 @@ static void InitEntryFrame()
 	)tcl"_tcl;
 }
 
+decltype(frame({})) gold_frame(const std::string& w)
+{
+	if (useTtk()) {
+		return frame(w) -style("Gold.TFrame"s);
+	} else {
+		return frame(w);
+	}
+}
+
 decltype(label({})) tlabel(const std::string& w)
 {
 	if (useTtk()) {
