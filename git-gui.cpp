@@ -322,7 +322,7 @@ int GitGui::do_blame_browser(const char* argv0,
 				return 2;
 			}
 		}
-		eval("set current_branch \"" + head + '"');
+		"current_branch"_tclv = head;
 	}
 
 	wm(deiconify, ".");
@@ -331,7 +331,7 @@ int GitGui::do_blame_browser(const char* argv0,
 			return report_usage();
 		if (head.empty()) {
 			if (!path.empty() && fs::is_directory(path)) {
-				head = std::string("return $current_branch"_tcl);
+				head = "current_branch"_tclvs;
 			} else {
 				head = path.string();
 				path.clear();
@@ -387,7 +387,7 @@ int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
 
 void GitGui::apply_theme_config()
 {
-	bool usettk = !!"expr {$::repo_config(gui.usettk)}"_tcli;
+	bool usettk = !!"::repo_config(gui.usettk)"_tclvi;
 	useTtk(usettk);
 	if (usettk) {
 		"set ::use_ttk 1"_tcl;
@@ -1154,8 +1154,8 @@ if {[is_MacOSX]} {
 }
 	)tcl"_tcl;
 
-	m1t_pfx = "expr {$M1T}"_tcls + '-';
-	m1b_pfx = "<" + "expr {$M1B}"_tcls + '-';
+	m1t_pfx = "M1T"_tclvs + '-';
+	m1b_pfx = "<" + "M1B"_tclvs + '-';
 
 	R"tcl(
 proc bind_button3 {w cmd} {
@@ -1513,8 +1513,8 @@ if {![info exists env(SSH_ASKPASS)]} {
 		"apply_config"_tcl;
 		apply_theme_config();
 		"choose_repository::pick"_tcl;
-		repo.set_gitdir(std::string("return $_gitdir"_tcl));
-		repo.set_prefix(std::string("return $_prefix"_tcl));
+		repo.set_gitdir("_gitdir"_tclvs);
+		repo.set_prefix("_prefix"_tclvs);
 	}
 
 	// _gitdir exists, so try loading the config
@@ -2269,8 +2269,8 @@ static unsigned char file_statechange_bits[] = {
 } -maskdata $filemask
 
 	)tcl"_tcl;
-	eval("set ui_index " + ui_index);
-	eval("set ui_workdir " +  ui_workdir);
+	"ui_index"_tclv = ui_index;
+	"ui_workdir"_tclv =  ui_workdir;
 	R"tcl(
 
 set all_icons(_$ui_index)   file_plain

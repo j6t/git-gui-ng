@@ -10,27 +10,22 @@ using namespace Tk;
 
 Repo repo;
 
-static void set_var(const char* name, string val)
-{
-	eval("set "s + name + " \"" + Tk::details::quote(val) + '"');
-}
-
 void Repo::set_gitdir(path dir)
 {
 	m_gitdir = move(dir);
-	set_var("_gitdir", m_gitdir.string());
+	"_gitdir"_tclv = m_gitdir.string();
 }
 
 void Repo::set_prefix(path dir)
 {
 	m_prefix = move(dir);
-	set_var("_prefix", m_prefix.string());
+	"_prefix"_tclv = m_prefix.string();
 }
 
 void Repo::set_worktree(path dir)
 {
 	m_worktree = move(dir);
-	set_var("_gitworktree", m_worktree.string());
+	"_gitworktree"_tclv = m_worktree.string();
 }
 
 void Repo::init_name()
@@ -43,5 +38,5 @@ void Repo::init_name()
 		else
 			m_name = boost::filesystem::current_path().filename().string();
 	}
-	set_var("_reponame", m_name);
+	"_reponame"_tclv = m_name;
 }
