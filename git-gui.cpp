@@ -167,8 +167,8 @@ bool GitGui::discover_gitdir_prefix()
 		try {
 			// beware that from the .git dir this sets _gitdir to .
 			// and _prefix to the empty string
-			_gitdir = std::string("git rev-parse --git-dir"_tcl);
-			_prefix = std::string("git rev-parse --show-prefix"_tcl);
+			_gitdir = "git rev-parse --git-dir"_tcls;
+			_prefix = "git rev-parse --show-prefix"_tcls;
 		} catch (TkError&) {
 			return true;
 		}
@@ -188,7 +188,7 @@ bool GitGui::discover_gitdir_prefix()
 bool GitGui::discover_worktree()
 {
 	// v1.7.0 introduced --show-toplevel to return the canonical work-tree
-	fs::path _gitworktree = std::string("git rev-parse --show-toplevel"_tcl);
+	fs::path _gitworktree = "git rev-parse --show-toplevel"_tcls;
 
 	if (!repo.prefix().empty()) {
 		fs::path cdup = _gitworktree;
@@ -237,7 +237,7 @@ int GitGui::usage(const char* argv0, const std::string& args)
 	s += " ";
 	s += argv0;
 	s += " " + args;
-	if (std::string("tk windowingsystem"_tcl) == "win32") {
+	if ("tk windowingsystem"_tcls == "win32") {
 		wm(withdraw, ".");
 		tk_messageBox() -icon(info) -messagetext(s)
 			-title(mc("Usage"));
@@ -314,7 +314,7 @@ int GitGui::do_blame_browser(const char* argv0,
 				head = std::string(eval("git rev-parse --verify \"" + head + '"'));
 			} catch (TkError& e) {
 				std::string err = e.what();
-				if (std::string("tk windowingsystem"_tcl) == "win32") {
+				if ("tk windowingsystem"_tcls == "win32") {
 					tk_messageBox() -icon(error) -title(mc("Error")) -messagetext(err);
 				} else {
 					std::cerr << err << std::endl;
@@ -373,7 +373,7 @@ int GitGui::do_subcommand(const std::string& subcommand, const char* argv0,
 	else
 	{
 		auto s = mc("usage:") + " " + argv0 + " [{blame|browser|citool}]";
-		if (std::string("tk windowingsystem"_tcl) == "win32") {
+		if ("tk windowingsystem"_tcls == "win32") {
 			wm(withdraw, ".");
 			tk_messageBox() -icon(error) -messagetext(s)
 				-title(mc("Usage"));
