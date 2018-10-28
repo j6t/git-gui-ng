@@ -3288,8 +3288,10 @@ proc commit_btn_caption {} {
 		-xscrollcommand(".vpane.files.workdir.sx set"s)
 		-yscrollcommand(".vpane.files.workdir.sy set"s)
 		-state(disabled);
-	scrollbar(".vpane.files.workdir.sx"s) -orient(horizontal) -command([&]() { ui_workdir << xview(); });
-	scrollbar(".vpane.files.workdir.sy"s) -orient(vertical) -command([&]() { ui_workdir << yview(); });
+	scrollbar(".vpane.files.workdir.sx"s) -orient(horizontal)
+		-command([&](const std::vector<std::string>& cmd) { ui_workdir << xview(cmd); });
+	scrollbar(".vpane.files.workdir.sy"s) -orient(vertical)
+		-command([&](const std::vector<std::string>& cmd) { ui_workdir << yview(cmd); });
 	pack(".vpane.files.workdir.title"s) -side(top) -fill(Tk::x);
 	pack(".vpane.files.workdir.sx"s) -side(bottom) -fill(Tk::x);
 	pack(".vpane.files.workdir.sy"s) -side(right) -fill(Tk::y);
@@ -3310,8 +3312,10 @@ proc commit_btn_caption {} {
 		-xscrollcommand(".vpane.files.index.sx set"s)
 		-yscrollcommand(".vpane.files.index.sy set"s)
 		-state(disabled);
-	scrollbar(".vpane.files.index.sx"s) -orient(horizontal) -command([&]() { ui_index << xview(); });
-	scrollbar(".vpane.files.index.sy"s) -orient(vertical) -command([&]() { ui_index << yview(); });
+	scrollbar(".vpane.files.index.sx"s) -orient(horizontal)
+		-command([&](const std::vector<std::string>& cmd) { ui_index << xview(cmd); });
+	scrollbar(".vpane.files.index.sy"s) -orient(vertical)
+		-command([&](const std::vector<std::string>& cmd) { ui_index << yview(cmd); });
 	pack(".vpane.files.index.title"s) -side(top) -fill(Tk::x);
 	pack(".vpane.files.index.sx"s) -side(bottom) -fill(Tk::x);
 	pack(".vpane.files.index.sy"s) -side(right) -fill(Tk::y);
@@ -3448,7 +3452,7 @@ trace add variable commit_type write trace_commit_type
 		-font("font_diff"s)
 		-yscrollcommand(".vpane.lower.commarea.buffer.frame.sby set"s);
 	scrollbar(".vpane.lower.commarea.buffer.frame.sby"s)
-		-command([&]() { ui_comm << yview(); });
+		-command([&](const std::vector<std::string>& cmd) { ui_comm << yview(cmd); });
 
 	pack(".vpane.lower.commarea.buffer.frame.sby"s) -side(right) -fill(Tk::y);
 	pack(ui_comm) -side(left) -fill(Tk::y);
